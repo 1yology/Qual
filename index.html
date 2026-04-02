@@ -78,6 +78,9 @@
       display: flex;
       align-items: center;
       gap: 14px;
+      min-width: 0;
+      flex: 1;
+      margin-right: 12px;
     }
     .header-crest {
       width: 42px;
@@ -94,9 +97,10 @@
       display: flex;
       flex-direction: column;
       line-height: 1.2;
+      min-width: 0;
     }
-    .header-title .main { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 600; color: var(--white); letter-spacing: .3px; }
-    .header-title .sub  { font-size: 11px; font-weight: 300; color: rgba(255,255,255,.65); letter-spacing: .8px; text-transform: uppercase; }
+    .header-title .main { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 600; color: var(--white); letter-spacing: .3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .header-title .sub  { font-size: 11px; font-weight: 300; color: rgba(255,255,255,.65); letter-spacing: .8px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .lang-toggle {
       background: rgba(255,255,255,.12);
       border: 1px solid rgba(255,255,255,.25);
@@ -134,13 +138,12 @@
     .progress-step:not(:last-child)::after {
       content: '';
       position: absolute;
-      right: 0;
       top: 50%;
       transform: translateY(-50%);
-      width: calc(100% - 120px);
       height: 2px;
       background: var(--gray-200);
-      left: 130px;
+      left: 42px;
+      right: 0;
       transition: var(--transition);
     }
     .progress-step.done:not(:last-child)::after { background: var(--green-mid); }
@@ -403,18 +406,20 @@
     .input-wrap {
       position: relative;
       flex: 1;
-      min-width: 200px;
+      min-width: 0;
     }
     .input-wrap input, .input-wrap select {
       width: 100%;
       padding: 14px 18px;
       border: 1.5px solid var(--gray-200);
       border-radius: var(--radius-sm);
-      font-size: 15px;
+      font-size: 16px; /* 16px prevents iOS auto-zoom */
       color: var(--gray-800);
       background: var(--white);
       outline: none;
       transition: var(--transition);
+      -webkit-appearance: none;
+      appearance: none;
     }
     .input-wrap input:focus, .input-wrap select:focus {
       border-color: var(--green-mid);
@@ -768,12 +773,13 @@
       padding: 14px 18px;
       border: 1.5px solid var(--gray-200);
       border-radius: var(--radius-sm);
-      font-size: 22px;
+      font-size: 20px;
       font-family: 'Playfair Display', serif;
       color: var(--green-deep);
       background: var(--white);
       outline: none;
       transition: var(--transition);
+      -webkit-appearance: none;
     }
     .sig-type-input:focus { border-color: var(--green-mid); box-shadow: 0 0 0 3px var(--green-pale); }
 
@@ -934,19 +940,175 @@
     .loading-overlay p { font-size: 15px; color: var(--gray-600); font-weight: 500; }
 
     /* ─── RESPONSIVE ───────────────────────────────────── */
+
+    /* ── Tablet (≤768px) ── */
     @media (max-width: 768px) {
-      .site-header { padding: 0 20px; }
+      .site-header { padding: 0 16px; height: 60px; }
+      .header-crest { width: 36px; height: 36px; }
+      .header-crest svg { width: 20px; height: 20px; }
+      .header-title .main { font-size: 14px; }
+      .header-title .sub  { display: none; }
+
       .progress-bar-wrap { padding: 0 16px; }
+      .progress-steps { height: 56px; }
       .step-label { display: none; }
-      .landing-hero { padding: 40px 28px; }
-      .main-content { padding: 28px 16px 60px; }
-      .consent-document { padding: 24px 20px; }
+      .step-dot { width: 28px; height: 28px; font-size: 11px; }
+
+      .main-content { padding: 20px 14px 80px; }
+      .card { padding: 24px 18px; border-radius: var(--radius-md); }
+
+      .landing-hero { padding: 32px 22px; border-radius: var(--radius-lg); margin-bottom: 20px; }
+      .hero-eyebrow { font-size: 10px; }
+      .hero-desc { font-size: 14px; margin-bottom: 24px; }
+      .hero-steps-row { gap: 8px; margin-bottom: 28px; }
+      .hero-step-chip { font-size: 12px; padding: 6px 12px; }
+
+      .landing-info-grid { grid-template-columns: 1fr; gap: 12px; }
+      .info-card { display: flex; align-items: flex-start; gap: 16px; padding: 16px 18px; }
+      .info-card-icon { margin-bottom: 0; flex-shrink: 0; }
+
+      .edu-section-header { padding: 14px 16px; gap: 10px; }
+      .edu-body { padding: 0 16px; }
+      .edu-section.open .edu-body { padding: 16px 16px 20px; }
+
+      .consent-document { padding: 20px 16px; }
+      .consent-letterhead { flex-direction: row; align-items: flex-start; gap: 12px; }
+      .consent-hosp-name { font-size: 15px; }
+      .consent-logo-area { width: 44px; height: 44px; flex-shrink: 0; }
+      .consent-logo-area svg { width: 22px; height: 22px; }
+
+      .confirm-hero { padding: 32px 16px 24px; }
+      .summary-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    }
+
+    /* ── Phone (≤480px) ── */
+    @media (max-width: 480px) {
+      /* Header */
+      .header-title .main { font-size: 13px; }
+      .lang-toggle { padding: 5px 12px; font-size: 12px; }
+
+      /* Progress — dots only, centered */
+      .progress-steps { justify-content: center; gap: 0; }
+      .progress-step { flex: none; width: 40px; justify-content: center; }
+      .progress-step:not(:last-child)::after { left: 28px; right: -12px; }
+
+      /* Main */
+      .main-content { padding: 16px 12px 90px; }
+      .card { padding: 20px 16px; border-radius: var(--radius-md); }
+      .display-title { font-size: 22px; }
+
+      /* Hero */
+      .landing-hero { padding: 28px 18px; }
+      .hero-title { font-size: 24px; }
+      .hero-steps-row { flex-direction: column; gap: 8px; }
+      .hero-step-chip { width: 100%; justify-content: flex-start; }
+
+      /* Form — stack DOB + Procedure columns */
+      .form-two-col { grid-template-columns: 1fr !important; }
+
+      /* Education screen header (title + badge) */
+      .edu-screen-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+      /* APAIS Likert scale — vertical layout on very small screens */
+      .likert-row {
+        flex-direction: row; /* keep horizontal but compress */
+      }
+      .likert-option { padding: 10px 2px; }
+      .likert-option .likert-dot { width: 20px; height: 20px; }
+      .likert-label-text { font-size: 10px; }
+
+      /* Score preview */
+      .score-preview { flex-direction: column; gap: 8px; align-items: flex-start; }
+      .score-num { font-size: 36px !important; }
+
+      /* Buttons — always full width & stacked on phones */
+      .btn-row-mobile { flex-direction: column-reverse !important; }
+      .btn-row-mobile .btn { width: 100%; justify-content: center; }
+      .btn-lg { padding: 15px 28px; font-size: 15px; }
+
+      /* Consent document */
+      .consent-document { padding: 16px 14px; font-size: 13px; }
+      .consent-document h2 { font-size: 16px; }
+      .consent-letterhead { gap: 10px; }
+      .consent-hosp-name { font-size: 13px; }
+      .consent-hosp-sub { font-size: 10px; }
+      .consent-logo-area { width: 38px; height: 38px; }
+      .consent-logo-area svg { width: 18px; height: 18px; }
+
+      /* Signature canvas — taller for finger drawing */
+      #sigCanvas { height: 160px; }
+      .sig-tab { padding: 11px 10px; font-size: 12px; }
+
+      /* Confirmation */
+      .confirm-hero { padding: 24px 12px 20px; }
+      .summary-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .summary-item { padding: 14px 12px; }
+      .summary-item .s-value { font-size: 15px; }
+      .message-box { padding: 18px 16px; gap: 12px; }
+      .message-box div h4 { font-size: 14px; }
+      .message-box div p  { font-size: 13px; }
+      .step-done-item { padding: 10px 14px; }
+      .step-done-item span { font-size: 13px; }
+
+      /* Toast — full width bottom banner on phones */
+      .toast-wrap { bottom: 0; right: 0; left: 0; padding: 12px; }
+      .toast { min-width: unset; width: 100%; border-radius: var(--radius-sm); }
+
+      /* Inline flex utility override */
+      .flex-between { align-items: flex-start; }
+    }
+
+    /* ── Very small phones (≤360px) ── */
+    @media (max-width: 360px) {
+      .site-header { padding: 0 12px; height: 56px; }
+      .header-crest { width: 32px; height: 32px; }
+      .header-title .main { font-size: 12px; }
+      .main-content { padding: 14px 10px 90px; }
+      .card { padding: 16px 14px; }
+      .landing-hero { padding: 22px 16px; }
+      .hero-title { font-size: 20px; }
+      .likert-option { padding: 8px 1px; }
+      .likert-label-text { font-size: 9px; }
+    }
+
+    /* ─── iOS SAFE AREA SUPPORT ────────────────────────── */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .main-content {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom));
+      }
+      .site-header {
+        padding-top: env(safe-area-inset-top);
+      }
+    }
+
+    /* ─── STICKY MOBILE BOTTOM BAR ─────────────────────── */
+    /* Wraps the primary CTA on each screen for phones */
+    .mobile-sticky-bar {
+      display: none;
     }
     @media (max-width: 480px) {
-      .hero-steps-row { gap: 10px; }
-      .hero-step-chip { font-size: 12px; padding: 6px 12px; }
-      .likert-option { padding: 10px 2px; }
-      .likert-label-text { font-size: 10px; }
+      .mobile-sticky-bar {
+        display: block;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--white);
+        border-top: 1px solid var(--gray-200);
+        padding: 12px 16px;
+        padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        z-index: 90;
+        box-shadow: 0 -4px 20px rgba(0,86,43,.1);
+      }
+      .mobile-sticky-bar .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      /* Push content above the sticky bar */
+      .screen.active .card:last-child,
+      .screen.active > .btn-row-mobile:last-child {
+        margin-bottom: 80px;
+      }
     }
 
     /* ─── UTILITY ──────────────────────────────────────── */
@@ -1049,7 +1211,7 @@
               <div class="field-error" id="idError" data-en="Please enter a valid 10-digit ID." data-ar="يرجى إدخال رقم هوية مكوّن من 10 أرقام.">Please enter a valid 10-digit ID.</div>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="form-two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
               <div class="input-group" style="margin-bottom:0">
                 <label class="input-label" data-en="Date of Birth" data-ar="تاريخ الميلاد">Date of Birth</label>
                 <div class="input-wrap">
@@ -1115,7 +1277,7 @@
         <!--  SCREEN 1 — EDUCATION                       -->
         <!-- ════════════════════════════════════════════ -->
         <div class="screen" id="screen1">
-          <div class="flex-between mb-16">
+          <div class="flex-between mb-16 edu-screen-header">
             <div>
               <p class="section-label" data-en="Step 1 of 3" data-ar="الخطوة 1 من 3">Step 1 of 3</p>
               <h2 class="display-title" data-en="Procedure Education" data-ar="التثقيف حول الإجراء">Procedure Education</h2>
@@ -1200,7 +1362,7 @@
             </div>
             <div class="field-error" id="eduCheckError" data-en="Please confirm you have reviewed the educational material." data-ar="يرجى تأكيد مراجعتك للمواد التعليمية.">Please confirm you have reviewed the educational material.</div>
 
-            <div class="mt-24 flex-gap-12">
+            <div class="mt-24 flex-gap-12 btn-row-mobile">
               <button class="btn btn-outline" onclick="goToScreen(0)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
                 <span class="btn-text" data-en="Back" data-ar="رجوع">Back</span>
@@ -1240,7 +1402,7 @@
             <div class="score-num" id="liveScore">—</div>
           </div>
 
-          <div class="mt-16 flex-gap-12">
+          <div class="mt-16 flex-gap-12 btn-row-mobile">
             <button class="btn btn-outline" onclick="goToScreen(1)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
               <span class="btn-text" data-en="Back" data-ar="رجوع">Back</span>
@@ -1307,7 +1469,7 @@
           <!-- Patient Details Confirmation -->
           <div class="card mb-24">
             <p class="section-label" data-en="Patient Details" data-ar="بيانات المريض">Patient Details</p>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;">
               <div><span style="font-size:12px;color:var(--gray-400);font-weight:600;text-transform:uppercase;letter-spacing:.8px;" data-en="Full Name" data-ar="الاسم الكامل">Full Name</span><br/><strong id="consentName" style="font-size:15px;">—</strong></div>
               <div><span style="font-size:12px;color:var(--gray-400);font-weight:600;text-transform:uppercase;letter-spacing:.8px;" data-en="ID Number" data-ar="رقم الهوية">ID Number</span><br/><strong id="consentId" style="font-size:15px;">—</strong></div>
               <div><span style="font-size:12px;color:var(--gray-400);font-weight:600;text-transform:uppercase;letter-spacing:.8px;" data-en="Procedure" data-ar="الإجراء">Procedure</span><br/><strong id="consentProcedure" style="font-size:15px;">—</strong></div>
@@ -1362,8 +1524,7 @@
           </div>
           <div class="field-error" id="checklistError" data-en="Please check all boxes to confirm your consent." data-ar="يرجى تحديد جميع الخانات لتأكيد موافقتك.">Please check all boxes to confirm your consent.</div>
 
-          <div class="mt-24 flex-gap-12">
-            <button class="btn btn-outline" onclick="goToScreen(2)">
+          <div class="mt-24 flex-gap-12 btn-row-mobile">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
               <span class="btn-text" data-en="Back" data-ar="رجوع">Back</span>
             </button>
@@ -1429,6 +1590,12 @@
     </main>
   </div>
 
+  <!-- ── MOBILE STICKY BOTTOM BAR ── -->
+  <!-- Shown only on phones (≤480px), mirrors each screen's primary action -->
+  <div class="mobile-sticky-bar" id="mobileStickyBar">
+    <!-- Content swapped by JS per screen -->
+  </div>
+
   <!-- ── TOAST CONTAINER ── -->
   <div class="toast-wrap" id="toastWrap"></div>
 
@@ -1444,8 +1611,8 @@
   <script>
   /* ─── CONFIG ──────────────────────────────────────────────────────── */
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbzv2gpN16BB3W2DL0sB_NSg6vRrEJJyJcyCfZEHdPYu2bCoYVsdPvgnPKUtkWmfR81W/exec'; // Replace with actual URL
-  const APAIS_THRESHOLD = 11; // Scores >= 11 are flagged as high anxiety
-  const YOUTUBE_VIDEO_ID = 'xhiKCPMCFMo'; // Replace with appropriate surgical education video
+  const APAIS_THRESHOLD = 11;
+  const YOUTUBE_VIDEO_ID = 'xhiKCPMCFMo';
 
   /* ─── STATE ───────────────────────────────────────────────────────── */
   const state = {
@@ -1459,7 +1626,8 @@
     sigMode: 'draw',
     sigData: null,
     eduChecked: false,
-    consentChecks: { cc1: false, cc2: false, cc3: false }
+    consentChecks: { cc1: false, cc2: false, cc3: false },
+    canvasInited: false
   };
 
   /* ─── APAIS QUESTIONS ─────────────────────────────────────────────── */
@@ -1476,11 +1644,42 @@
     ar: ['لا على الإطلاق', 'قليلاً', 'إلى حد ما', 'كثيراً', 'بشدة']
   };
 
+  /* ─── MOBILE STICKY BAR CONFIG ────────────────────────────────────── */
+  const stickyBarContent = {
+    0: () => `<button class="btn btn-primary" onclick="startProcess()">
+        <span class="btn-text" data-en="Begin Session" data-ar="ابدأ الجلسة">${state.lang === 'en' ? 'Begin Session' : 'ابدأ الجلسة'}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>`,
+    1: () => `<button class="btn btn-primary" onclick="proceedToAPAIS()">
+        <span class="btn-text">${state.lang === 'en' ? 'Continue to Assessment' : 'المتابعة إلى التقييم'}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>`,
+    2: () => `<button class="btn btn-primary" onclick="submitAPAIS()">
+        <span class="btn-text">${state.lang === 'en' ? 'Submit Assessment' : 'تقديم التقييم'}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>`,
+    3: () => `<button class="btn btn-gold" onclick="submitConsent()">
+        <span class="btn-text">${state.lang === 'en' ? 'Submit Consent' : 'تقديم الموافقة'}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+      </button>`,
+    4: () => `<button class="btn btn-outline" onclick="window.print()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        <span>${state.lang === 'en' ? 'Print Summary' : 'طباعة الملخص'}</span>
+      </button>`
+  };
+
+  function updateStickyBar(screenIndex) {
+    const bar = document.getElementById('mobileStickyBar');
+    if (!bar) return;
+    const fn = stickyBarContent[screenIndex];
+    bar.innerHTML = fn ? fn() : '';
+  }
+
   /* ─── INIT ────────────────────────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', () => {
     buildAPAIS();
-    initSignatureCanvas();
     updateConsentDate();
+    updateStickyBar(0);
   });
 
   /* ─── LANGUAGE ────────────────────────────────────────────────────── */
@@ -1493,15 +1692,14 @@
     document.querySelectorAll('[data-en]').forEach(el => {
       el.textContent = el.getAttribute('data-' + state.lang);
     });
-    // Rebuild APAIS questions
     buildAPAIS();
+    updateStickyBar(state.currentScreen);
   }
 
   /* ─── SCREEN NAVIGATION ───────────────────────────────────────────── */
   function goToScreen(n) {
     document.getElementById('screen' + state.currentScreen).classList.remove('active');
     document.getElementById('screen' + n).classList.add('active');
-    // Update progress steps
     for (let i = 0; i <= 4; i++) {
       const ps = document.getElementById('ps' + i);
       ps.classList.remove('active', 'done');
@@ -1509,7 +1707,21 @@
       if (i === n) ps.classList.add('active');
     }
     state.currentScreen = n;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    updateStickyBar(n);
+
+    // Scroll to top — works on mobile WebView and Safari
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) { window.scrollTo(0, 0); }
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    // Lazy-init signature canvas when screen 3 becomes visible
+    if (n === 3 && !state.canvasInited) {
+      // Small delay to ensure the element has a rendered width
+      requestAnimationFrame(() => setTimeout(() => {
+        initSignatureCanvas();
+        state.canvasInited = true;
+      }, 80));
+    }
   }
 
   /* ─── SCREEN 0: START ─────────────────────────────────────────────── */
@@ -1519,16 +1731,12 @@
     const id   = document.getElementById('patientId').value.trim();
     const dob  = document.getElementById('patientDob').value;
     const proc = document.getElementById('patientProcedure').value;
-
     clearErrors();
-
     if (!name) { showError('nameError', 'patientName'); valid = false; }
     if (!/^\d{10}$/.test(id)) { showError('idError', 'patientId'); valid = false; }
     if (!dob)  { showError('dobError', 'patientDob'); valid = false; }
     if (!proc) { showError('procError', 'patientProcedure'); valid = false; }
-
     if (!valid) return;
-
     state.patient = { name, id, dob, procedure: proc };
     document.getElementById('procedureBadge').textContent = proc;
     goToScreen(1);
@@ -1541,18 +1749,13 @@
     iframe.src = `https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1`;
     iframe.classList.remove('hidden');
   }
-
   function toggleEduSection(id) {
-    const sec = document.getElementById(id);
-    sec.classList.toggle('open');
+    document.getElementById(id).classList.toggle('open');
   }
-
   function toggleEduCheck() {
     state.eduChecked = !state.eduChecked;
-    const box = document.getElementById('eduCheckBox');
-    box.classList.toggle('checked', state.eduChecked);
+    document.getElementById('eduCheckBox').classList.toggle('checked', state.eduChecked);
   }
-
   function proceedToAPAIS() {
     if (!state.eduChecked) {
       document.getElementById('eduCheckError').classList.add('visible');
@@ -1567,15 +1770,14 @@
     const container = document.getElementById('apaisQuestions');
     if (!container) return;
     container.innerHTML = '';
+    const labels = likertLabels[state.lang];
     apaisQuestions.forEach((q, i) => {
-      const labels = likertLabels[state.lang];
-      const qText = q[state.lang];
       const card = document.createElement('div');
-      card.className = 'q-card';
+      card.className = 'q-card' + (state.apaisScores[i] > 0 ? ' answered' : '');
       card.id = 'qcard' + i;
       card.innerHTML = `
         <div class="q-number">${state.lang === 'en' ? 'Question' : 'سؤال'} ${i + 1} ${state.lang === 'en' ? 'of' : 'من'} 6</div>
-        <div class="q-text">${qText}</div>
+        <div class="q-text">${q[state.lang]}</div>
         <div class="likert-row">
           ${[1,2,3,4,5].map(v => `
             <label class="likert-option">
@@ -1591,28 +1793,20 @@
         </div>
       `;
       container.appendChild(card);
-      if (state.apaisScores[i] > 0) card.classList.add('answered');
     });
     refreshLiveScore();
   }
-
   function updateScore(qIndex, value) {
     state.apaisScores[qIndex] = value;
     document.getElementById('qcard' + qIndex).classList.add('answered');
     refreshLiveScore();
   }
-
   function refreshLiveScore() {
     const answered = state.apaisScores.filter(s => s > 0).length;
     const total = state.apaisScores.reduce((a, b) => a + b, 0);
     const el = document.getElementById('liveScore');
-    if (answered === 6) {
-      el.textContent = total;
-    } else {
-      el.textContent = `${answered}/6`;
-    }
+    el.textContent = answered === 6 ? total : `${answered}/6`;
   }
-
   function submitAPAIS() {
     const unanswered = state.apaisScores.filter(s => s === 0).length;
     if (unanswered > 0) {
@@ -1624,7 +1818,6 @@
     }
     state.totalScore = state.apaisScores.reduce((a, b) => a + b, 0);
     state.anxietyLevel = state.totalScore >= APAIS_THRESHOLD ? 'HIGH' : 'NORMAL';
-    // Populate consent page
     document.getElementById('consentName').textContent = state.patient.name;
     document.getElementById('consentId').textContent = state.patient.id;
     document.getElementById('consentProcedure').textContent = state.patient.procedure;
@@ -1637,48 +1830,100 @@
     const el = document.getElementById('consentDate');
     if (el) el.textContent = today;
   }
-
   function toggleCheck(id) {
     state.consentChecks[id] = !state.consentChecks[id];
     document.getElementById(id).classList.toggle('checked', state.consentChecks[id]);
   }
 
-  /* Signature Canvas */
+  /* ── Signature Canvas — with devicePixelRatio support ── */
   let sigCtx, isDrawing = false, hasSig = false;
+  let dpr = 1;
 
   function initSignatureCanvas() {
     const canvas = document.getElementById('sigCanvas');
     if (!canvas) return;
-    canvas.width = canvas.offsetWidth || 600;
+
+    dpr = window.devicePixelRatio || 1;
+
+    // CSS display size
+    const cssW = canvas.parentElement.clientWidth || 320;
+    const cssH = window.innerWidth <= 480 ? 160 : 130;
+
+    // Physical pixel size (sharp on Retina/AMOLED)
+    canvas.width  = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+
+    // CSS size stays the same
+    canvas.style.width  = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+
     const ctx = canvas.getContext('2d');
-    sigCtx = ctx;
+    ctx.scale(dpr, dpr); // scale context so coords stay in CSS pixels
     ctx.strokeStyle = '#1a2e1a';
     ctx.lineWidth = 2.2;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+    sigCtx = ctx;
 
-    // Mouse
-    canvas.addEventListener('mousedown', e => { isDrawing = true; ctx.beginPath(); ctx.moveTo(getPos(e, canvas).x, getPos(e, canvas).y); document.getElementById('sigHint').style.display = 'none'; });
-    canvas.addEventListener('mousemove', e => { if (!isDrawing) return; hasSig = true; ctx.lineTo(getPos(e, canvas).x, getPos(e, canvas).y); ctx.stroke(); });
-    canvas.addEventListener('mouseup', () => isDrawing = false);
-    canvas.addEventListener('mouseleave', () => isDrawing = false);
-    // Touch
-    canvas.addEventListener('touchstart', e => { e.preventDefault(); isDrawing = true; ctx.beginPath(); ctx.moveTo(getTouchPos(e, canvas).x, getTouchPos(e, canvas).y); document.getElementById('sigHint').style.display = 'none'; }, { passive: false });
-    canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!isDrawing) return; hasSig = true; ctx.lineTo(getTouchPos(e, canvas).x, getTouchPos(e, canvas).y); ctx.stroke(); }, { passive: false });
-    canvas.addEventListener('touchend', () => isDrawing = false);
+    // Remove old listeners by replacing with a clone
+    const fresh = canvas.cloneNode(true);
+    canvas.parentNode.replaceChild(fresh, canvas);
+    const c = document.getElementById('sigCanvas');
+
+    // Mouse events
+    c.addEventListener('mousedown', e => {
+      isDrawing = true;
+      sigCtx.beginPath();
+      sigCtx.moveTo(getPos(e, c).x, getPos(e, c).y);
+      document.getElementById('sigHint').style.display = 'none';
+    });
+    c.addEventListener('mousemove', e => {
+      if (!isDrawing) return;
+      hasSig = true;
+      sigCtx.lineTo(getPos(e, c).x, getPos(e, c).y);
+      sigCtx.stroke();
+    });
+    c.addEventListener('mouseup',    () => isDrawing = false);
+    c.addEventListener('mouseleave', () => isDrawing = false);
+
+    // Touch events — prevent scroll while drawing
+    c.addEventListener('touchstart', e => {
+      e.preventDefault();
+      isDrawing = true;
+      sigCtx.beginPath();
+      sigCtx.moveTo(getTouchPos(e, c).x, getTouchPos(e, c).y);
+      document.getElementById('sigHint').style.display = 'none';
+    }, { passive: false });
+    c.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (!isDrawing) return;
+      hasSig = true;
+      sigCtx.lineTo(getTouchPos(e, c).x, getTouchPos(e, c).y);
+      sigCtx.stroke();
+    }, { passive: false });
+    c.addEventListener('touchend',   e => { e.preventDefault(); isDrawing = false; }, { passive: false });
+
+    // Re-bind sigCtx after clone
+    sigCtx = c.getContext('2d');
+    sigCtx.scale(dpr, dpr);
+    sigCtx.strokeStyle = '#1a2e1a';
+    sigCtx.lineWidth = 2.2;
+    sigCtx.lineCap = 'round';
+    sigCtx.lineJoin = 'round';
   }
 
   function getPos(e, canvas) {
     const r = canvas.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
+    return { x: (e.clientX - r.left), y: (e.clientY - r.top) };
   }
   function getTouchPos(e, canvas) {
     const r = canvas.getBoundingClientRect();
-    return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+    const t = e.touches[0];
+    return { x: (t.clientX - r.left), y: (t.clientY - r.top) };
   }
   function clearSignature() {
-    const canvas = document.getElementById('sigCanvas');
-    sigCtx.clearRect(0, 0, canvas.width, canvas.height);
+    const c = document.getElementById('sigCanvas');
+    sigCtx.clearRect(0, 0, c.width / dpr, c.height / dpr);
     hasSig = false;
     document.getElementById('sigHint').style.display = '';
   }
@@ -1692,7 +1937,6 @@
 
   function submitConsent() {
     let valid = true;
-    // Check signature
     if (state.sigMode === 'draw') {
       if (!hasSig) { showFieldError('sigError'); valid = false; }
       else { hideFieldError('sigError'); state.sigData = 'drawn'; }
@@ -1701,13 +1945,10 @@
       if (!typed) { showFieldError('sigError'); valid = false; }
       else { hideFieldError('sigError'); state.sigData = typed; }
     }
-    // Check boxes
     const allChecked = state.consentChecks.cc1 && state.consentChecks.cc2 && state.consentChecks.cc3;
     if (!allChecked) { showFieldError('checklistError'); valid = false; }
     else { hideFieldError('checklistError'); }
-
     if (!valid) return;
-
     state.consentSigned = true;
     submitToBackend();
   }
@@ -1725,10 +1966,8 @@
       consentSigned: 'YES',
       timestamp:    new Date().toISOString()
     };
-
     try {
       if (GAS_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
-        // Demo mode
         await new Promise(r => setTimeout(r, 1800));
       } else {
         await fetch(GAS_URL, {
@@ -1753,35 +1992,29 @@
   /* ─── SCREEN 4: CONFIRMATION ──────────────────────────────────────── */
   function buildConfirmation() {
     const high = state.anxietyLevel === 'HIGH';
-    const hero = document.getElementById('confirmHero');
-    hero.innerHTML = `
+    document.getElementById('confirmHero').innerHTML = `
       <div class="status-icon ${high ? 'red' : 'green'}">
         ${high
           ? `<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01"/></svg>`
-          : `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`
-        }
+          : `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`}
       </div>
-      <h2 class="display-title" style="font-size:28px;margin-bottom:10px;">
-        ${state.lang === 'en'
-          ? (high ? 'Process Complete' : 'All Set!')
-          : (high ? 'اكتملت العملية' : 'كل شيء جاهز!')}
+      <h2 class="display-title" style="font-size:clamp(22px,5vw,28px);margin-bottom:10px;">
+        ${state.lang === 'en' ? (high ? 'Process Complete' : 'All Set!') : (high ? 'اكتملت العملية' : 'كل شيء جاهز!')}
       </h2>
       <p class="body-text">
         ${state.lang === 'en'
           ? `Your preoperative process has been completed for <strong>${state.patient.name}</strong>.`
           : `اكتملت عملية ما قبل الجراحة لـ <strong>${state.patient.name}</strong>.`}
-      </p>
-    `;
+      </p>`;
 
-    const grid = document.getElementById('summaryGrid');
-    grid.innerHTML = `
+    document.getElementById('summaryGrid').innerHTML = `
       <div class="summary-item">
         <div class="s-label">${state.lang === 'en' ? 'Patient' : 'المريض'}</div>
-        <div class="s-value" style="font-size:14px;">${state.patient.name}</div>
+        <div class="s-value" style="font-size:clamp(12px,3vw,14px);word-break:break-word;">${state.patient.name}</div>
       </div>
       <div class="summary-item">
         <div class="s-label">${state.lang === 'en' ? 'Procedure' : 'الإجراء'}</div>
-        <div class="s-value" style="font-size:14px;">${state.patient.procedure}</div>
+        <div class="s-value" style="font-size:clamp(12px,3vw,14px);word-break:break-word;">${state.patient.procedure}</div>
       </div>
       <div class="summary-item">
         <div class="s-label">${state.lang === 'en' ? 'APAIS Score' : 'درجة APAIS'}</div>
@@ -1790,39 +2023,29 @@
       <div class="summary-item">
         <div class="s-label">${state.lang === 'en' ? 'Anxiety Level' : 'مستوى القلق'}</div>
         <div class="s-value ${high ? 'score-high' : 'score-normal'}">
-          ${high
-            ? (state.lang === 'en' ? 'HIGH' : 'مرتفع')
-            : (state.lang === 'en' ? 'NORMAL' : 'طبيعي')}
+          ${high ? (state.lang === 'en' ? 'HIGH' : 'مرتفع') : (state.lang === 'en' ? 'NORMAL' : 'طبيعي')}
         </div>
-      </div>
-    `;
+      </div>`;
 
-    const msgBox = document.getElementById('messageBox');
-    if (high) {
-      msgBox.innerHTML = `
-        <div class="message-box high">
-          <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.18 6.18l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-          <div>
-            <h4>${state.lang === 'en' ? 'Support Team Will Contact You' : 'سيتصل بك فريق الدعم'}</h4>
-            <p>${state.lang === 'en'
-              ? 'Based on your assessment score, a member of our social work and patient support team will reach out to you shortly to provide additional care and guidance before your procedure.'
-              : 'استناداً إلى درجة تقييمك، سيتواصل معك أحد أعضاء فريق العمل الاجتماعي ودعم المرضى قريباً لتقديم رعاية وتوجيه إضافيين قبل إجراءاتك.'}</p>
-          </div>
+    document.getElementById('messageBox').innerHTML = high ? `
+      <div class="message-box high">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.18 6.18l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        <div>
+          <h4>${state.lang === 'en' ? 'Support Team Will Contact You' : 'سيتصل بك فريق الدعم'}</h4>
+          <p>${state.lang === 'en'
+            ? 'Based on your assessment score, a member of our social work and patient support team will reach out to you shortly to provide additional care and guidance before your procedure.'
+            : 'استناداً إلى درجة تقييمك، سيتواصل معك أحد أعضاء فريق العمل الاجتماعي ودعم المرضى قريباً.'}</p>
         </div>
-      `;
-    } else {
-      msgBox.innerHTML = `
-        <div class="message-box normal">
-          <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          <div>
-            <h4>${state.lang === 'en' ? 'You Are Ready for Your Procedure' : 'أنت مستعد لإجراءاتك'}</h4>
-            <p>${state.lang === 'en'
-              ? 'Your assessment indicates normal anxiety levels. Your care team has been notified and is prepared for your procedure. Please follow any pre-operative fasting or medication instructions provided.'
-              : 'يشير تقييمك إلى مستويات قلق طبيعية. تم إبلاغ فريق رعايتك وهم مستعدون لإجراءاتك. يرجى اتباع أي تعليمات تتعلق بالصيام أو الأدوية قبل العملية.'}</p>
-          </div>
+      </div>` : `
+      <div class="message-box normal">
+        <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <div>
+          <h4>${state.lang === 'en' ? 'You Are Ready for Your Procedure' : 'أنت مستعد لإجراءاتك'}</h4>
+          <p>${state.lang === 'en'
+            ? 'Your assessment indicates normal anxiety levels. Your care team has been notified and is prepared for your procedure. Please follow any pre-operative fasting or medication instructions provided.'
+            : 'يشير تقييمك إلى مستويات قلق طبيعية. تم إبلاغ فريق رعايتك وهم مستعدون لإجراءاتك.'}</p>
         </div>
-      `;
-    }
+      </div>`;
   }
 
   /* ─── HELPERS ─────────────────────────────────────────────────────── */
@@ -1845,19 +2068,21 @@
       ${type === 'success'
         ? `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`
         : `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`}
-      <span>${msg}</span>
-    `;
+      <span>${msg}</span>`;
     wrap.appendChild(t);
-    setTimeout(() => t.remove(), 4000);
+    setTimeout(() => { if (t.parentNode) t.remove(); }, 4200);
   }
 
-  // Resize canvas on window resize
+  // Re-init canvas on orientation change / resize
   window.addEventListener('resize', () => {
-    const canvas = document.getElementById('sigCanvas');
-    if (!canvas || state.currentScreen !== 3) return;
-    const data = sigCtx.getImageData(0, 0, canvas.width, canvas.height);
-    canvas.width = canvas.offsetWidth;
-    sigCtx.putImageData(data, 0, 0);
+    if (state.currentScreen !== 3 || !state.canvasInited) return;
+    state.canvasInited = false;
+    requestAnimationFrame(() => setTimeout(() => {
+      initSignatureCanvas();
+      state.canvasInited = true;
+      hasSig = false;
+      document.getElementById('sigHint').style.display = '';
+    }, 80));
   });
   </script>
 </body>
