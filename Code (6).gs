@@ -1,500 +1,1667 @@
-/**
- * ═══════════════════════════════════════════════════════════════
- *  KAUH Preoperative Anxiety Screening Platform — Backend
- *  Google Apps Script (Code.gs)
- *  King Abdulaziz University Hospital
- * ═══════════════════════════════════════════════════════════════
- *
- *  DEPLOYMENT INSTRUCTIONS:
- *  1. Open Google Sheets → Extensions → Apps Script
- *  2. Paste this entire file contents into Code.gs
- *  3. Save, then Deploy → New Deployment
- *  4. Type: Web App | Execute as: Me | Access: Anyone
- *  5. Copy the Web App URL and paste it in index.html (GAS_URL)
- * ═══════════════════════════════════════════════════════════════
- */
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مستشفى جامعة الملك عبدالعزيز — منصة المريض قبل الجراحة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── CSS VARIABLES ─────────────────────────────── */
+    :root {
+      --green-deep:   #00562B;
+      --green-mid:    #006C35;
+      --green-light:  #00843D;
+      --green-pale:   #E8F5EE;
+      --green-subtle: #F0FAF4;
+      --gold:         #B8975A;
+      --gold-light:   #D4AF6F;
+      --gold-pale:    #FBF5EA;
+      --white:        #FFFFFF;
+      --off-white:    #F8F9F7;
+      --gray-100:     #F2F3F1;
+      --gray-200:     #E4E5E2;
+      --gray-400:     #9A9C97;
+      --gray-600:     #5C5E58;
+      --gray-800:     #2E3028;
+      --shadow-sm:    0 2px 8px rgba(0,86,43,.08);
+      --shadow-md:    0 6px 24px rgba(0,86,43,.12);
+      --shadow-lg:    0 16px 48px rgba(0,86,43,.16);
+      --radius-sm:    10px;
+      --radius-md:    16px;
+      --radius-lg:    24px;
+      --radius-xl:    32px;
+      --transition:   all .28s cubic-bezier(.4,0,.2,1);
+    }
 
-/* ── CONFIGURATION ─────────────────────────────────────────────────── */
-const CONFIG = {
-  SPREADSHEET_ID:       SpreadsheetApp.getActiveSpreadsheet().getId(),
-  MAIN_SHEET_NAME:      'Patient Records',
-  HIGH_ANXIETY_SHEET:   'Flagged Patients',
-  LOG_SHEET_NAME:       'Submission Log',
-  APAIS_THRESHOLD:      11,       // Score >= this → HIGH anxiety
-  SOCIAL_WORKER_EMAIL:  'socialwork@kauh.edu.sa',   // Replace with actual email
-  ADMIN_EMAIL:          'admin@kauh.edu.sa',         // Replace with actual email
-  SEND_EMAILS:          true,     // Set to false during testing
-  TIMEZONE:             'Asia/Riyadh'
+    /* ─── RESET ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Tajawal', 'DM Sans', sans-serif;
+      background: var(--off-white);
+      color: var(--gray-800);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    [lang="en"] body, [lang="en"] * { font-family: 'DM Sans', 'Tajawal', sans-serif; }
+    img { display: block; max-width: 100%; }
+    button { cursor: pointer; font-family: inherit; }
+    input, textarea, select { font-family: inherit; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--gray-100); }
+    ::-webkit-scrollbar-thumb { background: var(--green-light); border-radius: 3px; }
+
+    .app-wrapper { min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* ─── HEADER ─────────────────────────────────────── */
+    .site-header {
+      background: var(--green-deep);
+      padding: 0 32px;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 16px rgba(0,0,0,.18);
+    }
+    .header-brand { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1; margin-left: 12px; }
+    [dir="ltr"] .header-brand { margin-left: 0; margin-right: 12px; }
+    .header-crest {
+      width: 42px; height: 42px;
+      background: var(--gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .header-crest svg { width: 24px; height: 24px; fill: var(--white); }
+    .header-title { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+    .header-title .main { font-family: 'Tajawal', serif; font-size: 16px; font-weight: 700; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .header-title .sub  { font-size: 11px; font-weight: 300; color: rgba(255,255,255,.65); letter-spacing: .8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lang-toggle {
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.25);
+      color: var(--white);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: var(--transition);
+      letter-spacing: .5px;
+      flex-shrink: 0;
+    }
+    .lang-toggle:hover { background: rgba(255,255,255,.2); }
+
+    /* ─── PROGRESS BAR ──────────────────────────────── */
+    .progress-bar-wrap {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 0 16px;
+      overflow-x: auto;
+    }
+    .progress-steps {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      height: 64px;
+      gap: 0;
+      min-width: 480px;
+    }
+    .progress-step {
+      display: flex; align-items: center; gap: 8px;
+      flex: 1; position: relative;
+    }
+    .progress-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 50%; transform: translateY(-50%);
+      height: 2px; background: var(--gray-200);
+      left: 36px; right: 0;
+      transition: var(--transition);
+    }
+    [dir="rtl"] .progress-step:not(:last-child)::after { left: 0; right: 36px; }
+    .progress-step.done:not(:last-child)::after { background: var(--green-mid); }
+    .step-dot {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: 2px solid var(--gray-200);
+      background: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+      color: var(--gray-400);
+      flex-shrink: 0;
+      transition: var(--transition);
+      z-index: 1;
+    }
+    .progress-step.active .step-dot { border-color: var(--green-mid); background: var(--green-mid); color: var(--white); box-shadow: 0 0 0 4px var(--green-pale); }
+    .progress-step.done .step-dot   { border-color: var(--green-mid); background: var(--green-mid); color: var(--white); }
+    .step-label { font-size: 11px; font-weight: 500; color: var(--gray-400); white-space: nowrap; transition: var(--transition); }
+    .progress-step.active .step-label { color: var(--green-mid); font-weight: 700; }
+    .progress-step.done  .step-label  { color: var(--green-mid); }
+
+    /* ─── MAIN ──────────────────────────────────────── */
+    .main-content { flex: 1; padding: 48px 24px 80px; }
+    .page-container { max-width: 840px; margin: 0 auto; }
+
+    /* ─── SCREEN ─────────────────────────────────────── */
+    .screen { display: none; animation: fadeUp .4s ease both; }
+    .screen.active { display: block; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── TYPOGRAPHY ─────────────────────────────────── */
+    .display-title {
+      font-family: 'Tajawal', 'Playfair Display', serif;
+      font-size: clamp(22px, 4vw, 34px);
+      font-weight: 700;
+      color: var(--green-deep);
+      line-height: 1.2;
+    }
+    [lang="en"] .display-title { font-family: 'Playfair Display', serif; }
+    .section-label {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 10px;
+    }
+    .body-text { font-size: 15px; color: var(--gray-600); line-height: 1.75; }
+
+    /* ─── CARD ──────────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 40px 44px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-200);
+    }
+    @media (max-width: 600px) { .card { padding: 24px 18px; } }
+
+    /* ─── BUTTONS ────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 32px; border-radius: 50px;
+      font-size: 15px; font-weight: 700;
+      border: none; transition: var(--transition);
+      position: relative; overflow: hidden;
+    }
+    .btn-primary { background: var(--green-mid); color: var(--white); box-shadow: 0 4px 16px rgba(0,108,53,.3); }
+    .btn-primary:hover { background: var(--green-deep); transform: translateY(-1px); }
+    .btn-outline { background: transparent; color: var(--green-mid); border: 2px solid var(--green-mid); }
+    .btn-outline:hover { background: var(--green-pale); }
+    .btn-gold { background: var(--gold); color: var(--white); box-shadow: 0 4px 16px rgba(184,151,90,.35); }
+    .btn-gold:hover { background: #a07d40; transform: translateY(-1px); }
+    .btn-lg { padding: 16px 40px; font-size: 16px; }
+    .btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .btn:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
+    .btn .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; display: none; }
+    .btn.loading .spinner { display: block; }
+    .btn.loading .btn-text { opacity: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── DIVIDER ────────────────────────────────────── */
+    .divider { height: 1px; background: var(--gray-200); margin: 32px 0; }
+
+    /* ─── BADGE ─────────────────────────────────────── */
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .badge-green  { background: var(--green-pale); color: var(--green-deep); }
+    .badge-gold   { background: var(--gold-pale); color: #7a5c20; }
+    .badge-red    { background: #FEF2F2; color: #B91C1C; }
+    .badge-blue   { background: #EFF6FF; color: #1D4ED8; }
+
+    /* ─── LANDING HERO ───────────────────────────────── */
+    .landing-hero {
+      background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 60%, var(--green-light) 100%);
+      border-radius: var(--radius-xl);
+      padding: 64px 56px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+    .landing-hero::before { content: ''; position: absolute; right: -80px; top: -80px; width: 320px; height: 320px; background: rgba(255,255,255,.04); border-radius: 50%; }
+    .landing-hero::after  { content: ''; position: absolute; right: 60px; bottom: -40px; width: 180px; height: 180px; background: rgba(184,151,90,.18); border-radius: 50%; }
+    .hero-eyebrow { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; margin-bottom: 16px; }
+    .hero-title { font-family: 'Tajawal', serif; font-size: clamp(26px, 5vw, 44px); font-weight: 700; color: var(--white); line-height: 1.2; margin-bottom: 20px; max-width: 520px; }
+    [lang="en"] .hero-title { font-family: 'Playfair Display', serif; }
+    .hero-desc { font-size: 16px; color: rgba(255,255,255,.78); max-width: 460px; line-height: 1.75; margin-bottom: 36px; }
+    .hero-steps-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 36px; }
+    .hero-step-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 50px; padding: 8px 16px;
+      font-size: 13px; color: var(--white); font-weight: 600;
+    }
+    .hero-step-chip .num { width: 20px; height: 20px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+
+    .landing-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .info-card { background: var(--white); border-radius: var(--radius-md); padding: 24px; border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm); }
+    .info-card-icon { width: 44px; height: 44px; background: var(--green-pale); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .info-card-icon svg { width: 22px; height: 22px; stroke: var(--green-mid); fill: none; stroke-width: 1.8; }
+    .info-card h3 { font-size: 15px; font-weight: 700; color: var(--gray-800); margin-bottom: 6px; }
+    .info-card p  { font-size: 13px; color: var(--gray-600); line-height: 1.6; }
+
+    /* ─── FORM ELEMENTS ──────────────────────────────── */
+    .patient-id-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+    .input-wrap { position: relative; flex: 1; min-width: 0; }
+    .input-wrap input, .input-wrap select {
+      width: 100%; padding: 14px 18px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      font-size: 16px; color: var(--gray-800);
+      background: var(--white); outline: none;
+      transition: var(--transition);
+      -webkit-appearance: none; appearance: none;
+    }
+    .input-wrap input:focus, .input-wrap select:focus { border-color: var(--green-mid); box-shadow: 0 0 0 3px var(--green-pale); }
+    .input-wrap input.error, .input-wrap select.error { border-color: #DC2626; box-shadow: 0 0 0 3px #FEF2F2; }
+    .input-label { display: block; font-size: 13px; font-weight: 700; color: var(--gray-600); margin-bottom: 8px; }
+    .input-group { margin-bottom: 20px; }
+    .field-error { font-size: 12px; color: #DC2626; margin-top: 5px; display: none; }
+    .field-error.visible { display: block; }
+
+    /* ─── VIDEO ──────────────────────────────────────── */
+    .video-frame-wrap {
+      background: #000;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      aspect-ratio: 16/9;
+      margin-bottom: 12px;
+      position: relative;
+      box-shadow: var(--shadow-md);
+    }
+    .video-frame-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
+    .video-fallback-link {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--green-pale); border: 1px solid #C5E0D0;
+      border-radius: var(--radius-sm); padding: 12px 18px;
+      margin-bottom: 24px; text-decoration: none;
+      color: var(--green-deep); font-size: 13px; font-weight: 600;
+      transition: var(--transition);
+    }
+    .video-fallback-link:hover { background: #d4eddf; }
+    .video-fallback-link svg { width: 18px; height: 18px; fill: #DC2626; flex-shrink: 0; }
+
+    /* ─── APAIS QUESTIONS ────────────────────────────── */
+    .apais-intro {
+      background: var(--gold-pale);
+      border: 1px solid #E8D9B5;
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      margin-bottom: 28px;
+      display: flex; gap: 14px; align-items: flex-start;
+    }
+    .apais-intro svg { width: 20px; height: 20px; fill: var(--gold); flex-shrink: 0; margin-top: 2px; }
+    .apais-intro p { font-size: 14px; color: var(--gray-600); line-height: 1.65; }
+
+    /* Phase badge inside APAIS */
+    .apais-phase-banner {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      margin-bottom: 24px;
+      border: 1.5px solid;
+    }
+    .apais-phase-banner.pre  { background: #EFF6FF; border-color: #BFDBFE; }
+    .apais-phase-banner.post { background: var(--green-pale); border-color: #C5E0D0; }
+    .apais-phase-banner svg { width: 22px; height: 22px; flex-shrink: 0; }
+    .apais-phase-banner.pre  svg { stroke: #2563EB; fill: none; stroke-width: 2; }
+    .apais-phase-banner.post svg { stroke: var(--green-mid); fill: none; stroke-width: 2; }
+    .apais-phase-banner div h4 { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    .apais-phase-banner.pre  div h4 { color: #1D4ED8; }
+    .apais-phase-banner.post div h4 { color: var(--green-deep); }
+    .apais-phase-banner div p { font-size: 12px; color: var(--gray-600); }
+
+    .apais-questions { display: flex; flex-direction: column; gap: 20px; }
+    .q-card {
+      background: var(--white);
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: 24px 28px;
+      transition: var(--transition);
+    }
+    .q-card:hover { border-color: var(--green-light); box-shadow: var(--shadow-sm); }
+    .q-card.answered { border-color: var(--green-mid); background: var(--green-subtle); }
+    .q-number { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+    .q-text { font-size: 15px; font-weight: 600; color: var(--gray-800); margin-bottom: 20px; line-height: 1.55; }
+    .likert-row {
+      display: flex; gap: 0;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 10px; overflow: hidden;
+    }
+    .likert-option {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 12px 6px; cursor: pointer;
+      transition: var(--transition); position: relative; gap: 6px;
+    }
+    .likert-option:not(:last-child) { border-right: 1px solid var(--gray-200); }
+    [dir="rtl"] .likert-option:not(:last-child) { border-right: none; border-left: 1px solid var(--gray-200); }
+    .likert-option:hover { background: var(--green-pale); }
+    .likert-option input[type="radio"] { display: none; }
+    .likert-option .likert-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--gray-300, #D1D5DB); transition: var(--transition); background: var(--white); }
+    .likert-option input:checked ~ .likert-dot { background: var(--green-mid); border-color: var(--green-mid); box-shadow: 0 0 0 3px var(--green-pale); }
+    .likert-label-text { font-size: 11px; color: var(--gray-400); text-align: center; line-height: 1.3; }
+    .likert-option:has(input:checked) { background: var(--green-pale); }
+    .likert-option:has(input:checked) .likert-label-text { color: var(--green-deep); font-weight: 700; }
+    .likert-extremes { display: flex; justify-content: space-between; margin-top: 8px; padding: 0 4px; }
+    .likert-extremes span { font-size: 11px; color: var(--gray-400); font-style: italic; }
+
+    .score-preview {
+      background: var(--green-pale);
+      border: 1px solid #C5E0D0;
+      border-radius: var(--radius-md);
+      padding: 18px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 28px; margin-bottom: 8px;
+    }
+    .score-preview p { font-size: 14px; color: var(--gray-600); }
+    .score-preview .score-num { font-size: 28px; font-weight: 700; color: var(--green-deep); }
+
+    /* ─── EDUCATION SECTIONS ─────────────────────────── */
+    .edu-sections { display: flex; flex-direction: column; gap: 20px; margin-bottom: 32px; }
+    .edu-section { border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden; }
+    .edu-section-header { padding: 18px 24px; background: var(--gray-100); display: flex; align-items: center; gap: 14px; cursor: pointer; user-select: none; }
+    .edu-section-header:hover { background: var(--green-pale); }
+    .edu-icon { width: 36px; height: 36px; background: var(--white); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: var(--shadow-sm); }
+    .edu-icon svg { width: 18px; height: 18px; stroke: var(--green-mid); fill: none; stroke-width: 2; }
+    .edu-section-header h3 { font-size: 15px; font-weight: 700; color: var(--gray-800); flex: 1; }
+    .chevron { width: 20px; height: 20px; stroke: var(--gray-400); fill: none; stroke-width: 2; transition: transform .25s ease; }
+    .edu-section.open .chevron { transform: rotate(180deg); }
+    .edu-body { padding: 0 24px; max-height: 0; overflow: hidden; transition: max-height .35s ease, padding .35s ease; }
+    .edu-section.open .edu-body { max-height: 400px; padding: 20px 24px 24px; }
+    .edu-body ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .edu-body ul li { display: flex; gap: 12px; font-size: 14px; color: var(--gray-600); line-height: 1.6; }
+    .edu-body ul li::before { content: ''; width: 6px; height: 6px; background: var(--gold); border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
+    [dir="rtl"] .edu-body ul li::before { margin-top: 7px; }
+
+    .understanding-check {
+      background: var(--green-pale); border: 1px solid #C5E0D0;
+      border-radius: var(--radius-md); padding: 20px 24px;
+      display: flex; align-items: flex-start; gap: 14px; margin-bottom: 28px;
+    }
+    .check-box {
+      width: 22px; height: 22px; border: 2px solid var(--green-mid);
+      border-radius: 5px; flex-shrink: 0; margin-top: 2px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: var(--transition); background: var(--white);
+    }
+    .check-box.checked { background: var(--green-mid); }
+    .check-box svg { width: 14px; height: 14px; stroke: white; fill: none; stroke-width: 3; display: none; }
+    .check-box.checked svg { display: block; }
+
+    /* ─── CONSENT ────────────────────────────────────── */
+    .consent-document {
+      background: var(--white); border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md); padding: 36px 40px;
+      margin-bottom: 28px; font-size: 14px; color: var(--gray-600); line-height: 1.85;
+    }
+    .consent-document h2 { font-family: 'Tajawal', 'Playfair Display', serif; font-size: 20px; color: var(--green-deep); margin-bottom: 16px; text-align: center; font-weight: 700; }
+    .consent-document h3 { font-size: 14px; font-weight: 700; color: var(--gray-800); margin: 20px 0 8px; }
+    .consent-document p { margin-bottom: 12px; }
+    .consent-document ol { padding-right: 20px; padding-left: 0; }
+    [dir="ltr"] .consent-document ol { padding-left: 20px; padding-right: 0; }
+    .consent-document ol li { margin-bottom: 8px; }
+    .consent-letterhead { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--green-mid); padding-bottom: 20px; margin-bottom: 24px; }
+    .consent-hosp-name { font-family: 'Tajawal', serif; font-size: 18px; color: var(--green-deep); font-weight: 700; }
+    .consent-hosp-sub  { font-size: 12px; color: var(--gray-400); letter-spacing: .5px; text-transform: uppercase; }
+    .consent-logo-area { width: 56px; height: 56px; background: var(--green-deep); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .consent-logo-area svg { width: 28px; height: 28px; fill: white; }
+
+    .signature-area { margin-top: 20px; }
+    .sig-canvas-wrap { border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm); background: #FAFAFA; position: relative; overflow: hidden; }
+    #sigCanvas { display: block; width: 100%; cursor: crosshair; touch-action: none; }
+    .sig-hint { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; color: var(--gray-400); font-size: 14px; }
+    .sig-actions { display: flex; gap: 10px; margin-top: 10px; }
+    .sig-tab-row { display: flex; gap: 0; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px; }
+    .sig-tab { flex: 1; padding: 10px 16px; font-size: 13px; font-weight: 600; background: var(--white); border: none; cursor: pointer; color: var(--gray-600); transition: var(--transition); }
+    .sig-tab:not(:last-child) { border-right: 1px solid var(--gray-200); }
+    [dir="rtl"] .sig-tab:not(:last-child) { border-right: none; border-left: 1px solid var(--gray-200); }
+    .sig-tab.active { background: var(--green-mid); color: white; }
+    .sig-type-input { width: 100%; padding: 14px 18px; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 20px; font-family: 'Tajawal', serif; color: var(--green-deep); background: var(--white); outline: none; transition: var(--transition); -webkit-appearance: none; }
+    .sig-type-input:focus { border-color: var(--green-mid); box-shadow: 0 0 0 3px var(--green-pale); }
+
+    .consent-checklist { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+    .consent-check-item { display: flex; align-items: flex-start; gap: 14px; cursor: pointer; }
+    .custom-checkbox { width: 22px; height: 22px; border: 2px solid var(--gray-200); border-radius: 5px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: var(--transition); background: var(--white); }
+    .custom-checkbox.checked { background: var(--green-mid); border-color: var(--green-mid); }
+    .custom-checkbox svg { width: 13px; height: 13px; stroke: white; fill: none; stroke-width: 3; display: none; }
+    .custom-checkbox.checked svg { display: block; }
+    .consent-check-item span { font-size: 14px; color: var(--gray-600); line-height: 1.6; }
+
+    /* ─── CONFIRMATION ───────────────────────────────── */
+    .confirm-hero { text-align: center; padding: 48px 32px 40px; }
+    .status-icon { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+    .status-icon.green { background: var(--green-pale); }
+    .status-icon.red   { background: #FEF2F2; }
+    .status-icon svg { width: 36px; height: 36px; }
+    .status-icon.green svg { stroke: var(--green-mid); fill: none; stroke-width: 2; }
+    .status-icon.red   svg { stroke: #DC2626; fill: none; stroke-width: 2; }
+
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-top: 32px; }
+    .summary-item { background: var(--gray-100); border-radius: var(--radius-md); padding: 20px; text-align: center; }
+    .summary-item .s-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--gray-400); font-weight: 700; margin-bottom: 8px; }
+    .summary-item .s-value { font-size: 18px; font-weight: 700; color: var(--gray-800); }
+    .summary-item .s-value.score-high { color: #DC2626; }
+    .summary-item .s-value.score-normal { color: var(--green-mid); }
+
+    .message-box { border-radius: var(--radius-md); padding: 24px 28px; margin-top: 28px; display: flex; gap: 16px; align-items: flex-start; }
+    .message-box.normal { background: var(--green-pale); border: 1px solid #C5E0D0; }
+    .message-box.high   { background: #FFF7ED; border: 1px solid #FED7AA; }
+    .message-box svg { width: 22px; height: 22px; flex-shrink: 0; margin-top: 1px; }
+    .message-box.normal svg { stroke: var(--green-mid); fill: none; stroke-width: 2; }
+    .message-box.high   svg { stroke: #EA580C; fill: none; stroke-width: 2; }
+    .message-box div h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .message-box.normal div h4 { color: var(--green-deep); }
+    .message-box.high   div h4 { color: #C2410C; }
+    .message-box div p { font-size: 14px; color: var(--gray-600); line-height: 1.65; }
+
+    .steps-done-list { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+    .step-done-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--white); border-radius: var(--radius-sm); border: 1px solid var(--gray-200); }
+    .step-done-item .check-circle { width: 28px; height: 28px; background: var(--green-pale); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .step-done-item .check-circle svg { width: 14px; height: 14px; stroke: var(--green-mid); fill: none; stroke-width: 2.5; }
+    .step-done-item span { font-size: 14px; color: var(--gray-800); font-weight: 500; }
+
+    /* ─── TOAST ──────────────────────────────────────── */
+    .toast-wrap { position: fixed; bottom: 32px; left: 32px; right: auto; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    [dir="ltr"] .toast-wrap { left: auto; right: 32px; }
+    .toast {
+      background: var(--white); border-radius: var(--radius-md);
+      padding: 14px 20px; box-shadow: var(--shadow-lg);
+      border-right: 4px solid var(--green-mid);
+      font-size: 14px; color: var(--gray-800);
+      display: flex; align-items: center; gap: 12px;
+      min-width: 260px;
+      animation: slideInLeft .3s ease, fadeOut .3s ease 3.5s forwards;
+    }
+    [dir="ltr"] .toast { border-right: none; border-left: 4px solid var(--green-mid); animation: slideInRight .3s ease, fadeOut .3s ease 3.5s forwards; }
+    .toast.error { border-right-color: #DC2626; }
+    [dir="ltr"] .toast.error { border-left-color: #DC2626; }
+    .toast svg { width: 18px; height: 18px; stroke: var(--green-mid); fill: none; stroke-width: 2.5; flex-shrink: 0; }
+    .toast.error svg { stroke: #DC2626; }
+    @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes fadeOut { to { opacity: 0; } }
+
+    /* ─── LOADING OVERLAY ────────────────────────────── */
+    .loading-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,86,43,.72);
+      display: none; align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px; z-index: 9000;
+    }
+    .loading-overlay.active { display: flex; }
+    .loading-ring { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,.3); border-top-color: white; border-radius: 50%; animation: spin .8s linear infinite; }
+    .loading-overlay p { color: white; font-size: 15px; font-weight: 500; }
+
+    /* ─── UTILITIES ──────────────────────────────────── */
+    .flex-between { display: flex; align-items: center; justify-content: space-between; }
+    .flex-gap-12 { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .mt-8  { margin-top: 8px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-24 { margin-top: 24px; }
+    .mt-32 { margin-top: 32px; }
+    .mb-16 { margin-bottom: 16px; }
+    .mb-24 { margin-bottom: 24px; }
+    .text-center { text-align: center; }
+    .hidden { display: none !important; }
+
+    /* ─── MOBILE STICKY BAR ──────────────────────────── */
+    .mobile-sticky-bar { display: none; }
+    @media (max-width: 480px) {
+      .mobile-sticky-bar {
+        display: block; position: fixed; bottom: 0; left: 0; right: 0;
+        background: var(--white); border-top: 1px solid var(--gray-200);
+        padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        z-index: 90; box-shadow: 0 -4px 20px rgba(0,86,43,.1);
+      }
+      .mobile-sticky-bar .btn { width: 100%; justify-content: center; }
+    }
+
+    /* ─── RESPONSIVE ─────────────────────────────────── */
+    @media (max-width: 600px) {
+      .main-content { padding: 16px 12px 90px; }
+      .landing-hero { padding: 28px 18px; }
+      .hero-title { font-size: 24px; }
+      .hero-steps-row { flex-direction: column; gap: 8px; }
+      .hero-step-chip { width: 100%; }
+      .form-two-col { grid-template-columns: 1fr !important; }
+      .edu-screen-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .likert-option { padding: 10px 2px; }
+      .likert-option .likert-dot { width: 20px; height: 20px; }
+      .likert-label-text { font-size: 10px; }
+      .score-preview { flex-direction: column; gap: 8px; align-items: flex-start; }
+      .btn-row-mobile { flex-direction: column-reverse !important; }
+      .btn-row-mobile .btn { width: 100%; justify-content: center; }
+      .consent-document { padding: 16px 14px; font-size: 13px; }
+      .confirm-hero { padding: 24px 12px 20px; }
+      .summary-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .summary-item { padding: 14px 12px; }
+      .toast-wrap { bottom: 0; right: 0; left: 0; padding: 12px; }
+      .toast { min-width: unset; width: 100%; }
+      .progress-steps { min-width: 380px; }
+      .step-label { font-size: 9px; }
+    }
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .main-content { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+      .site-header { padding-top: env(safe-area-inset-top); }
+    }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+
+  <!-- ── HEADER ── -->
+  <header class="site-header">
+    <div class="header-brand">
+      <div class="header-crest">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L3 7v10l9 5 9-5V7L12 2zm0 2.18L19 8v8l-7 3.9L5 16V8l7-3.82z"/>
+          <path d="M12 7v10M7 9.5h10"/>
+        </svg>
+      </div>
+      <div class="header-title">
+        <span class="main" id="headerMain">مستشفى جامعة الملك عبدالعزيز</span>
+        <span class="sub" id="headerSub">منصة المريض قبل الجراحة</span>
+      </div>
+    </div>
+    <button class="lang-toggle" id="langToggle" onclick="toggleLang()">English</button>
+  </header>
+
+  <!-- ── PROGRESS BAR ── -->
+  <div class="progress-bar-wrap" id="progressBarWrap">
+    <div class="progress-steps">
+      <div class="progress-step active" id="ps0">
+        <div class="step-dot">1</div>
+        <span class="step-label" id="sl0">التسجيل</span>
+      </div>
+      <div class="progress-step" id="ps1">
+        <div class="step-dot">2</div>
+        <span class="step-label" id="sl1">التقييم الأوّلي</span>
+      </div>
+      <div class="progress-step" id="ps2">
+        <div class="step-dot">3</div>
+        <span class="step-label" id="sl2">الفيديو التعليمي</span>
+      </div>
+      <div class="progress-step" id="ps3">
+        <div class="step-dot">4</div>
+        <span class="step-label" id="sl3">التقييم البعدي</span>
+      </div>
+      <div class="progress-step" id="ps4">
+        <div class="step-dot">5</div>
+        <span class="step-label" id="sl4">الموافقة</span>
+      </div>
+      <div class="progress-step" id="ps5">
+        <div class="step-dot">6</div>
+        <span class="step-label" id="sl5">اكتمل</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <main class="main-content">
+    <div class="page-container">
+
+      <!-- ════════════════════════ SCREEN 0 — REGISTRATION ════════ -->
+      <div class="screen active" id="screen0">
+        <div class="landing-hero">
+          <p class="hero-eyebrow" id="heroEyebrow">برنامج الرعاية قبل الجراحة</p>
+          <h1 class="hero-title" id="heroTitle">رحلتك الجراحية تبدأ هنا</h1>
+          <p class="hero-desc" id="heroDesc">ستساعدك هذه الجلسة القصيرة على التعرف على إجراءاتك الجراحية وتقييم حالتك وإتمام موافقتك — في مكان واحد.</p>
+          <div class="hero-steps-row">
+            <div class="hero-step-chip"><span class="num">1</span> <span id="chip1">تقييم ما قبل المشاهدة</span></div>
+            <div class="hero-step-chip"><span class="num">2</span> <span id="chip2">شاهد الفيديو التعليمي</span></div>
+            <div class="hero-step-chip"><span class="num">3</span> <span id="chip3">تقييم ما بعد المشاهدة</span></div>
+            <div class="hero-step-chip"><span class="num">4</span> <span id="chip4">وقّع الموافقة</span></div>
+          </div>
+        </div>
+
+        <div class="card mt-24">
+          <p class="section-label" id="regLabel">تسجيل المريض</p>
+          <h2 class="display-title mb-16" style="font-size:24px;" id="regTitle">أدخل بياناتك</h2>
+
+          <div class="input-group">
+            <label class="input-label" id="lblName">الاسم الكامل</label>
+            <div class="input-wrap"><input type="text" id="patientName" /></div>
+            <div class="field-error" id="nameError">يرجى إدخال اسمك الكامل.</div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" id="lblId">رقم الهوية الوطنية / الإقامة</label>
+            <div class="input-wrap"><input type="text" id="patientId" maxlength="10" /></div>
+            <div class="field-error" id="idError">يرجى إدخال رقم هوية مكوّن من 10 أرقام.</div>
+          </div>
+
+          <div class="form-two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="input-group" style="margin-bottom:0">
+              <label class="input-label" id="lblDob">تاريخ الميلاد</label>
+              <div class="input-wrap"><input type="date" id="patientDob" /></div>
+              <div class="field-error" id="dobError">مطلوب.</div>
+            </div>
+            <div class="input-group" style="margin-bottom:0">
+              <label class="input-label" id="lblProc">الإجراء المقرر</label>
+              <div class="input-wrap">
+                <select id="patientProcedure">
+                  <option value="" id="procPlaceholder">اختر الإجراء</option>
+                  <option value="جراحة عامة">جراحة عامة</option>
+                  <option value="جراحة العظام">جراحة العظام</option>
+                  <option value="جراحة القلب">جراحة القلب</option>
+                  <option value="جراحة بالمنظار">جراحة بالمنظار</option>
+                  <option value="جراحة الأنف والأذن والحنجرة">جراحة الأنف والأذن والحنجرة</option>
+                  <option value="جراحة المخ والأعصاب">جراحة المخ والأعصاب</option>
+                  <option value="المسالك البولية">المسالك البولية</option>
+                  <option value="طب العيون">طب العيون</option>
+                  <option value="أخرى">أخرى</option>
+                </select>
+              </div>
+              <div class="field-error" id="procError">يرجى اختيار الإجراء.</div>
+            </div>
+          </div>
+
+          <div class="mt-32">
+            <button class="btn btn-primary btn-lg" onclick="startProcess()">
+              <span class="btn-text" id="btnBegin">ابدأ الجلسة</span>
+              <div class="spinner"></div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="landing-info-grid mt-24">
+          <div class="info-card">
+            <div class="info-card-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <h3 id="ic1t">سري وآمن</h3>
+            <p id="ic1d">بياناتك مخزنة بأمان ولا يطلع عليها إلا فريق رعايتك.</p>
+          </div>
+          <div class="info-card">
+            <div class="info-card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+            <h3 id="ic2t">يستغرق 8–12 دقيقة</h3>
+            <p id="ic2d">عملية سريعة ومريحة مصممة لتهيئتك للجراحة.</p>
+          </div>
+          <div class="info-card">
+            <div class="info-card-icon"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.18 6.18l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></div>
+            <h3 id="ic3t">الدعم متاح</h3>
+            <p id="ic3d">يتم تلقائياً تحويل المرضى المصابين بقلق شديد إلى الأخصائي الاجتماعي.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════ SCREEN 1 — PRE-VIDEO APAIS ════════ -->
+      <div class="screen" id="screen1">
+        <p class="section-label" id="preLabel">الخطوة 1 من 4</p>
+        <h2 class="display-title mb-16" id="preTitle">تقييم القلق — قبل مشاهدة الفيديو</h2>
+
+        <div class="apais-phase-banner pre">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          <div>
+            <h4 id="preBannerTitle">التقييم الأوّلي</h4>
+            <p id="preBannerDesc">نقيس مستوى قلقك قبل مشاهدة الفيديو التعليمي.</p>
+          </div>
+        </div>
+
+        <div class="apais-intro">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-11v6h2v-6h-2zm0-4v2h2V7h-2z"/></svg>
+          <p id="apaisIntroText">يساعدنا مقياس أمستردام للقلق قبل الجراحة (APAIS) على فهم كيف تشعر قبل إجراءاتك. يرجى الإجابة بصدق — لا توجد إجابات صحيحة أو خاطئة.</p>
+        </div>
+
+        <div class="apais-questions" id="preApaisQuestions"></div>
+
+        <div class="score-preview" id="preScorePreview">
+          <div>
+            <p style="font-weight:700;color:var(--gray-800);margin-bottom:4px;" id="preScoreLabel">النتيجة الحالية</p>
+            <p style="font-size:13px;" id="preScoreHint">أجب على جميع الأسئلة للمتابعة</p>
+          </div>
+          <div class="score-num" id="preLiveScore">—</div>
+        </div>
+
+        <div class="mt-16 flex-gap-12 btn-row-mobile">
+          <button class="btn btn-outline" onclick="goToScreen(0)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            <span class="btn-text" id="backBtn1">رجوع</span>
+          </button>
+          <button class="btn btn-primary" onclick="submitPreAPAIS()">
+            <span class="btn-text" id="btnPreSubmit">التالي — شاهد الفيديو</span>
+            <div class="spinner"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ════════════════════════ SCREEN 2 — VIDEO ════════ -->
+      <div class="screen" id="screen2">
+        <div class="flex-between mb-16 edu-screen-header">
+          <div>
+            <p class="section-label" id="vidLabel">الخطوة 2 من 4</p>
+            <h2 class="display-title" id="vidTitle">الفيديو التعليمي</h2>
+          </div>
+          <span class="badge badge-gold" id="procedureBadge">جراحة عامة</span>
+        </div>
+
+        <div class="card">
+          <!-- Video Player — embedded directly for reliability -->
+          <div class="video-frame-wrap">
+            <iframe
+              id="videoIframe"
+              src="https://www.youtube.com/embed/vMAjWEsptFQ?rel=0&modestbranding=1"
+              title="Procedure Education Video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              loading="lazy"></iframe>
+          </div>
+          <!-- Fallback: open directly on YouTube if embed is blocked -->
+          <a class="video-fallback-link" href="https://www.youtube.com/watch?v=vMAjWEsptFQ" target="_blank" rel="noopener" id="videoFallbackLink">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M23.495 6.205a3.007 3.007 0 00-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 00.527 6.205a31.247 31.247 0 00-.522 5.805 31.247 31.247 0 00.522 5.783 3.007 3.007 0 002.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 002.088-2.088 31.247 31.247 0 00.5-5.783 31.247 31.247 0 00-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+            <span id="vidFallbackText">إذا لم يظهر الفيديو، اضغط هنا لمشاهدته على يوتيوب</span>
+          </a>
+
+          <!-- Educational Accordion Sections -->
+          <div class="edu-sections">
+            <div class="edu-section open" id="sec-overview">
+              <div class="edu-section-header" onclick="toggleEduSection('sec-overview')">
+                <div class="edu-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
+                <h3 id="sec1h">نظرة عامة على الإجراء</h3>
+                <svg class="chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+              <div class="edu-body">
+                <ul>
+                  <li id="ov1">سيشرح جراحك الخطوات المحددة لعمليتك قبل إجراء العملية.</li>
+                  <li id="ov2">قد يُستخدم التخدير العام أو الموضعي حسب حالتك.</li>
+                  <li id="ov3">يضم الفريق الجراحي جراحاً وطبيب تخدير وممرضة عمليات.</li>
+                  <li id="ov4">ستتم مراقبتك طوال الإجراء بمعدات قياس العلامات الحيوية.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="edu-section" id="sec-risks">
+              <div class="edu-section-header" onclick="toggleEduSection('sec-risks')">
+                <div class="edu-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01"/></svg></div>
+                <h3 id="sec2h">المخاطر والاعتبارات</h3>
+                <svg class="chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+              <div class="edu-body">
+                <ul>
+                  <li id="rk1">تنطوي جميع الإجراءات الجراحية على بعض المخاطر، بما في ذلك العدوى والنزيف وردود الفعل التخديرية.</li>
+                  <li id="rk2">قيّم فريقك الطبي ملف المخاطر الخاص بك واتخذ خطوات للحد من المضاعفات.</li>
+                  <li id="rk3">يرجى إبلاغ فريقك بجميع الأدوية الحالية والحساسية والتاريخ الجراحي السابق.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="edu-section" id="sec-recovery">
+              <div class="edu-section-header" onclick="toggleEduSection('sec-recovery')">
+                <div class="edu-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+                <h3 id="sec3h">توقعات التعافي</h3>
+                <svg class="chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+              <div class="edu-body">
+                <ul>
+                  <li id="rv1">ستُنقل إلى غرفة الإفاقة مباشرة بعد العملية حيث ستُراقَب علاماتك الحيوية.</li>
+                  <li id="rv2">ستُقدَّم لك إدارة الألم. أبلغ ممرضتك فوراً عن أي إزعاج.</li>
+                  <li id="rv3">اتبع جميع تعليمات الخروج المتعلقة بالنظام الغذائي وقيود النشاط ومواعيد المتابعة.</li>
+                  <li id="rv4">يختلف وقت التعافي حسب الإجراء والصحة الفردية. سيقدم فريقك جدولاً زمنياً شخصياً.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Understanding check -->
+          <div class="understanding-check" id="understandingCheck">
+            <div class="check-box" id="eduCheckBox" onclick="toggleEduCheck()">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <p style="font-size:14px;color:var(--gray-600);" id="eduCheckText">
+              لقد شاهدت أو قرأت المواد التعليمية وأفهم إجراءاتي الجراحية المقررة.
+            </p>
+          </div>
+          <div class="field-error" id="eduCheckError">يرجى تأكيد مراجعتك للمواد التعليمية.</div>
+
+          <div class="mt-24 flex-gap-12 btn-row-mobile">
+            <button class="btn btn-outline" onclick="goToScreen(1)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+              <span class="btn-text" id="backBtn2">رجوع</span>
+            </button>
+            <button class="btn btn-primary" onclick="proceedToPostAPAIS()">
+              <span class="btn-text" id="btnPostProceed">التالي — التقييم البعدي</span>
+              <div class="spinner"></div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════ SCREEN 3 — POST-VIDEO APAIS ════════ -->
+      <div class="screen" id="screen3">
+        <p class="section-label" id="postLabel">الخطوة 3 من 4</p>
+        <h2 class="display-title mb-16" id="postTitle">تقييم القلق — بعد مشاهدة الفيديو</h2>
+
+        <div class="apais-phase-banner post">
+          <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <div>
+            <h4 id="postBannerTitle">التقييم البعدي</h4>
+            <p id="postBannerDesc">نعيد قياس مستوى قلقك بعد مشاهدة الفيديو التعليمي.</p>
+          </div>
+        </div>
+
+        <div class="apais-intro">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-11v6h2v-6h-2zm0-4v2h2V7h-2z"/></svg>
+          <p id="postIntroText">الآن بعد أن شاهدت الفيديو، أجب على نفس الأسئلة مرة أخرى. ستساعدنا إجاباتك على قياس فائدة التعليم.</p>
+        </div>
+
+        <div class="apais-questions" id="postApaisQuestions"></div>
+
+        <div class="score-preview" id="postScorePreview">
+          <div>
+            <p style="font-weight:700;color:var(--gray-800);margin-bottom:4px;" id="postScoreLabel">النتيجة الحالية</p>
+            <p style="font-size:13px;" id="postScoreHint">أجب على جميع الأسئلة للمتابعة</p>
+          </div>
+          <div class="score-num" id="postLiveScore">—</div>
+        </div>
+
+        <div class="mt-16 flex-gap-12 btn-row-mobile">
+          <button class="btn btn-outline" onclick="goToScreen(2)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            <span class="btn-text" id="backBtn3">رجوع</span>
+          </button>
+          <button class="btn btn-primary" onclick="submitPostAPAIS()">
+            <span class="btn-text" id="btnPostSubmit">التالي — الموافقة</span>
+            <div class="spinner"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ════════════════════════ SCREEN 4 — CONSENT ════════ -->
+      <div class="screen" id="screen4">
+        <p class="section-label" id="conLabel">الخطوة 4 من 4</p>
+        <h2 class="display-title mb-16" id="conTitle">الموافقة المستنيرة</h2>
+
+        <!-- Consent Document -->
+        <div class="consent-document">
+          <div class="consent-letterhead">
+            <div>
+              <div class="consent-hosp-name" id="conHospName">مستشفى جامعة الملك عبدالعزيز</div>
+              <div class="consent-hosp-sub" id="conHospSub">وزارة التعليم — جدة، المملكة العربية السعودية</div>
+            </div>
+            <div class="consent-logo-area">
+              <svg viewBox="0 0 24 24"><path d="M12 2L3 7v10l9 5 9-5V7L12 2zm0 2.18L19 8v8l-7 3.9L5 16V8l7-3.82z"/><path d="M12 7v10M7 9.5h10"/></svg>
+            </div>
+          </div>
+          <h2 id="conDocTitle">موافقة مستنيرة على الإجراء الجراحي</h2>
+          <p id="conDocIntro">أنا، المريض الموقع أدناه، أمنح بهذه الوثيقة موافقتي المستنيرة للخضوع للإجراء الجراحي المقرر في مستشفى جامعة الملك عبدالعزيز. وأؤكد ما يلي:</p>
+          <h3 id="conH1">1. الموافقة الطوعية</h3>
+          <p id="conP1">أقدم هذه الموافقة طوعاً وبدون إكراه. أفهم أن لدي الحق في رفض أو تقييد أي جانب من جوانب رعايتي.</p>
+          <h3 id="conH2">2. طبيعة الإجراء</h3>
+          <p id="conP2">أفهم الإجراء الجراحي المقرر، والبدائل المتاحة، وعواقب رفض الإجراء، كما أوضحها لي فريق رعايتي.</p>
+          <h3 id="conH3">3. المخاطر والفوائد</h3>
+          <p id="conP3">لقد أُبلغت بالمخاطر والفوائد والمضاعفات المحتملة المرتبطة بهذا الإجراء وبالتخدير.</p>
+          <h3 id="conH4">4. الخصوصية والبيانات</h3>
+          <p id="conP4">أوافق على استخدام معلوماتي الطبية لأغراض رعايتي واحتياجات التوثيق السريري في المستشفى.</p>
+          <h3 id="conH5">5. حق الانسحاب</h3>
+          <p id="conP5">أفهم أن لي الحق في سحب موافقتي في أي وقت قبل بدء الإجراء، دون المساس باستمرار رعايتي.</p>
+        </div>
+
+        <!-- Patient Details -->
+        <div class="card mb-24">
+          <p class="section-label" id="conPatLabel">بيانات المريض</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;">
+            <div><span style="font-size:12px;color:var(--gray-400);font-weight:700;text-transform:uppercase;letter-spacing:.8px;" id="conFNLabel">الاسم الكامل</span><br/><strong id="consentName" style="font-size:15px;">—</strong></div>
+            <div><span style="font-size:12px;color:var(--gray-400);font-weight:700;text-transform:uppercase;letter-spacing:.8px;" id="conIDLabel">رقم الهوية</span><br/><strong id="consentId" style="font-size:15px;">—</strong></div>
+            <div><span style="font-size:12px;color:var(--gray-400);font-weight:700;text-transform:uppercase;letter-spacing:.8px;" id="conProcLabel">الإجراء</span><br/><strong id="consentProcedure" style="font-size:15px;">—</strong></div>
+            <div><span style="font-size:12px;color:var(--gray-400);font-weight:700;text-transform:uppercase;letter-spacing:.8px;" id="conDateLabel">التاريخ</span><br/><strong id="consentDate" style="font-size:15px;">—</strong></div>
+          </div>
+
+          <!-- Signature -->
+          <div class="signature-area">
+            <label class="input-label" id="sigLabel">توقيع المريض</label>
+            <div class="sig-tab-row">
+              <button class="sig-tab active" id="tabDraw" onclick="switchSigTab('draw')" id="tabDrawBtn">ارسم التوقيع</button>
+              <button class="sig-tab" id="tabType" onclick="switchSigTab('type')" id="tabTypeBtn">اكتب الاسم</button>
+            </div>
+            <div id="drawArea">
+              <div class="sig-canvas-wrap">
+                <canvas id="sigCanvas" height="130"></canvas>
+                <div class="sig-hint" id="sigHint">ارسم توقيعك هنا</div>
+              </div>
+              <div class="sig-actions">
+                <button class="btn btn-outline" style="padding:9px 20px;font-size:13px;" onclick="clearSignature()">
+                  <span id="clearBtn">مسح</span>
+                </button>
+              </div>
+            </div>
+            <div id="typeArea" class="hidden">
+              <input type="text" class="sig-type-input" id="sigTypeInput" />
+            </div>
+            <div class="field-error" id="sigError">يرجى تقديم توقيعك.</div>
+          </div>
+        </div>
+
+        <!-- Checklist -->
+        <div class="consent-checklist">
+          <label class="consent-check-item" onclick="toggleCheck('cc1')">
+            <div class="custom-checkbox" id="cc1"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span id="cc1Text">أؤكد أنني قرأت وفهمت وثيقة الموافقة أعلاه.</span>
+          </label>
+          <label class="consent-check-item" onclick="toggleCheck('cc2')">
+            <div class="custom-checkbox" id="cc2"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span id="cc2Text">أوافق طوعاً على الإجراء المقرر وأفوض الفريق الجراحي للمضي قدماً.</span>
+          </label>
+          <label class="consent-check-item" onclick="toggleCheck('cc3')">
+            <div class="custom-checkbox" id="cc3"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span id="cc3Text">أفهم أنه يمكنني طرح الأسئلة في أي وقت قبل الإجراء أو بعده.</span>
+          </label>
+        </div>
+        <div class="field-error" id="checklistError">يرجى تحديد جميع الخانات لتأكيد موافقتك.</div>
+
+        <div class="mt-24 flex-gap-12 btn-row-mobile">
+          <button class="btn btn-outline" onclick="goToScreen(3)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            <span class="btn-text" id="backBtn4">رجوع</span>
+          </button>
+          <button class="btn btn-gold btn-lg" onclick="submitConsent()">
+            <span class="btn-text" id="btnSubmitConsent">تقديم الموافقة</span>
+            <div class="spinner"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ════════════════════════ SCREEN 5 — CONFIRMATION ════════ -->
+      <div class="screen" id="screen5">
+        <div class="card">
+          <div class="confirm-hero" id="confirmHero"></div>
+          <div class="divider"></div>
+
+          <p class="section-label" id="doneLabel">الخطوات المكتملة</p>
+          <div class="steps-done-list">
+            <div class="step-done-item"><div class="check-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span id="done1">تم التقييم الأوّلي للقلق (قبل الفيديو)</span></div>
+            <div class="step-done-item"><div class="check-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span id="done2">تمت مشاهدة الفيديو التعليمي</span></div>
+            <div class="step-done-item"><div class="check-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span id="done3">تم التقييم البعدي للقلق (بعد الفيديو)</span></div>
+            <div class="step-done-item"><div class="check-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span id="done4">تم توقيع الموافقة المستنيرة وتقديمها</span></div>
+          </div>
+
+          <div class="summary-grid" id="summaryGrid"></div>
+          <div id="messageBox" class="mt-16"></div>
+
+          <div class="mt-32 text-center">
+            <button class="btn btn-outline" onclick="window.print()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              <span id="btnPrint">طباعة الملخص</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ── MOBILE STICKY BAR ── -->
+<div class="mobile-sticky-bar" id="mobileStickyBar"></div>
+
+<!-- ── TOAST ── -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ── LOADING OVERLAY ── -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-ring"></div>
+  <p id="loadingText">جارٍ إرسال بياناتك بأمان...</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════ -->
+<!--  JAVASCRIPT                                         -->
+<!-- ════════════════════════════════════════════════════ -->
+<script>
+/* ─── CONFIG ────────────────────────────────────────────── */
+const GAS_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL'; // Replace with deployed URL
+const APAIS_THRESHOLD = 11;
+const YOUTUBE_VIDEO_ID = 'vMAjWEsptFQ';
+
+/* ─── STATE ─────────────────────────────────────────────── */
+const state = {
+  lang: 'ar',
+  currentScreen: 0,
+  patient: { name: '', id: '', dob: '', procedure: '' },
+  preScores:  [0, 0, 0, 0, 0, 0],
+  postScores: [0, 0, 0, 0, 0, 0],
+  preTotalScore:  0,
+  postTotalScore: 0,
+  preAnxietyLevel:  '',
+  postAnxietyLevel: '',
+  consentSigned: false,
+  sigMode: 'draw',
+  sigData: null,
+  eduChecked: false,
+  consentChecks: { cc1: false, cc2: false, cc3: false },
+  canvasInited: false
 };
 
-/* ── SHEET COLUMN HEADERS ──────────────────────────────────────────── */
-const MAIN_HEADERS = [
-  'Timestamp',
-  'Patient ID',
-  'Full Name',
-  'Date of Birth',
-  'Scheduled Procedure',
-  'APAIS Score',
-  'Anxiety Level',
-  'Consent Signed',
-  'Submission IP',
-  'Reference Number'
+let hasSig = false;
+let sigCtx  = null;
+let dpr     = 1;
+
+/* ─── APAIS QUESTIONS ───────────────────────────────────── */
+const apaisQuestions = [
+  { en: "I am worried about the anesthetic.",                            ar: "أنا قلق بشأن التخدير." },
+  { en: "The anesthetic is on my mind continually.",                     ar: "يراودني التفكير في التخدير باستمرار." },
+  { en: "I am worried about the procedure.",                             ar: "أنا قلق بشأن الإجراء الجراحي." },
+  { en: "The procedure is on my mind continually.",                      ar: "يراودني التفكير في الإجراء الجراحي باستمرار." },
+  { en: "I would like as much information as possible about the anesthetic.", ar: "أرغب في الحصول على أكبر قدر ممكن من المعلومات حول التخدير." },
+  { en: "I would like as much information as possible about the procedure.",  ar: "أرغب في الحصول على أكبر قدر ممكن من المعلومات حول الإجراء الجراحي." }
 ];
+const likertLabels = {
+  en: ['Not at all', 'Slightly', 'Moderately', 'Quite a bit', 'Extremely'],
+  ar: ['لا على الإطلاق', 'قليلاً', 'إلى حد ما', 'كثيراً', 'بشدة']
+};
 
-const FLAG_HEADERS = [
-  'Timestamp',
-  'Reference Number',
-  'Patient ID',
-  'Full Name',
-  'Scheduled Procedure',
-  'APAIS Score',
-  'Anxiety Level',
-  'Status',
-  'Social Worker Assigned',
-  'Notes'
-];
-
-
-/* ══════════════════════════════════════════════════════════════════════
- *  ENTRY POINTS
- * ══════════════════════════════════════════════════════════════════════ */
-
-/**
- * Handle GET requests — used for CORS preflight & dashboard reads
- */
-function doGet(e) {
-  const action = e.parameter.action || '';
-
-  if (action === 'getPatientData') {
-    return handleGetPatientData(e);
+/* ─── TRANSLATIONS ──────────────────────────────────────── */
+const T = {
+  ar: {
+    headerMain: 'مستشفى جامعة الملك عبدالعزيز',
+    headerSub: 'منصة المريض قبل الجراحة',
+    langBtn: 'English',
+    sl0:'التسجيل', sl1:'التقييم الأوّلي', sl2:'الفيديو التعليمي', sl3:'التقييم البعدي', sl4:'الموافقة', sl5:'اكتمل',
+    heroEyebrow:'برنامج الرعاية قبل الجراحة',
+    heroTitle:'رحلتك الجراحية تبدأ هنا',
+    heroDesc:'ستساعدك هذه الجلسة القصيرة على التعرف على إجراءاتك الجراحية وتقييم حالتك وإتمام موافقتك — في مكان واحد.',
+    chip1:'تقييم ما قبل المشاهدة', chip2:'شاهد الفيديو التعليمي', chip3:'تقييم ما بعد المشاهدة', chip4:'وقّع الموافقة',
+    regLabel:'تسجيل المريض', regTitle:'أدخل بياناتك',
+    lblName:'الاسم الكامل', lblId:'رقم الهوية الوطنية / الإقامة', lblDob:'تاريخ الميلاد', lblProc:'الإجراء المقرر',
+    procPlaceholder:'اختر الإجراء',
+    nameError:'يرجى إدخال اسمك الكامل.', idError:'يرجى إدخال رقم هوية مكوّن من 10 أرقام.', dobError:'مطلوب.', procError:'يرجى اختيار الإجراء.',
+    btnBegin:'ابدأ الجلسة',
+    ic1t:'سري وآمن', ic1d:'بياناتك مخزنة بأمان ولا يطلع عليها إلا فريق رعايتك.',
+    ic2t:'يستغرق 8–12 دقيقة', ic2d:'عملية سريعة ومريحة مصممة لتهيئتك للجراحة.',
+    ic3t:'الدعم متاح', ic3d:'يتم تلقائياً تحويل المرضى المصابين بقلق شديد إلى الأخصائي الاجتماعي.',
+    preLabel:'الخطوة 1 من 4', preTitle:'تقييم القلق — قبل مشاهدة الفيديو',
+    preBannerTitle:'التقييم الأوّلي', preBannerDesc:'نقيس مستوى قلقك قبل مشاهدة الفيديو التعليمي.',
+    apaisIntroText:'يساعدنا مقياس أمستردام للقلق قبل الجراحة (APAIS) على فهم كيف تشعر قبل إجراءاتك. يرجى الإجابة بصدق — لا توجد إجابات صحيحة أو خاطئة.',
+    preScoreLabel:'النتيجة الحالية', preScoreHint:'أجب على جميع الأسئلة للمتابعة',
+    backBtn1:'رجوع', btnPreSubmit:'التالي — شاهد الفيديو',
+    vidLabel:'الخطوة 2 من 4', vidTitle:'الفيديو التعليمي',
+    vidFallbackText:'إذا لم يظهر الفيديو، اضغط هنا لمشاهدته على يوتيوب',
+    sec1h:'نظرة عامة على الإجراء', sec2h:'المخاطر والاعتبارات', sec3h:'توقعات التعافي',
+    ov1:'سيشرح جراحك الخطوات المحددة لعمليتك قبل إجراء العملية.',
+    ov2:'قد يُستخدم التخدير العام أو الموضعي حسب حالتك.',
+    ov3:'يضم الفريق الجراحي جراحاً وطبيب تخدير وممرضة عمليات.',
+    ov4:'ستتم مراقبتك طوال الإجراء بمعدات قياس العلامات الحيوية.',
+    rk1:'تنطوي جميع الإجراءات الجراحية على بعض المخاطر، بما في ذلك العدوى والنزيف وردود الفعل التخديرية.',
+    rk2:'قيّم فريقك الطبي ملف المخاطر الخاص بك واتخذ خطوات للحد من المضاعفات.',
+    rk3:'يرجى إبلاغ فريقك بجميع الأدوية الحالية والحساسية والتاريخ الجراحي السابق.',
+    rv1:'ستُنقل إلى غرفة الإفاقة مباشرة بعد العملية حيث ستُراقَب علاماتك الحيوية.',
+    rv2:'ستُقدَّم لك إدارة الألم. أبلغ ممرضتك فوراً عن أي إزعاج.',
+    rv3:'اتبع جميع تعليمات الخروج المتعلقة بالنظام الغذائي وقيود النشاط ومواعيد المتابعة.',
+    rv4:'يختلف وقت التعافي حسب الإجراء والصحة الفردية. سيقدم فريقك جدولاً زمنياً شخصياً.',
+    eduCheckText:'لقد شاهدت أو قرأت المواد التعليمية وأفهم إجراءاتي الجراحية المقررة.',
+    eduCheckError:'يرجى تأكيد مراجعتك للمواد التعليمية.',
+    backBtn2:'رجوع', btnPostProceed:'التالي — التقييم البعدي',
+    postLabel:'الخطوة 3 من 4', postTitle:'تقييم القلق — بعد مشاهدة الفيديو',
+    postBannerTitle:'التقييم البعدي', postBannerDesc:'نعيد قياس مستوى قلقك بعد مشاهدة الفيديو التعليمي.',
+    postIntroText:'الآن بعد أن شاهدت الفيديو، أجب على نفس الأسئلة مرة أخرى. ستساعدنا إجاباتك على قياس فائدة التعليم.',
+    postScoreLabel:'النتيجة الحالية', postScoreHint:'أجب على جميع الأسئلة للمتابعة',
+    backBtn3:'رجوع', btnPostSubmit:'التالي — الموافقة',
+    conLabel:'الخطوة 4 من 4', conTitle:'الموافقة المستنيرة',
+    conHospName:'مستشفى جامعة الملك عبدالعزيز', conHospSub:'وزارة التعليم — جدة، المملكة العربية السعودية',
+    conDocTitle:'موافقة مستنيرة على الإجراء الجراحي',
+    conDocIntro:'أنا، المريض الموقع أدناه، أمنح بهذه الوثيقة موافقتي المستنيرة للخضوع للإجراء الجراحي المقرر في مستشفى جامعة الملك عبدالعزيز. وأؤكد ما يلي:',
+    conH1:'1. الموافقة الطوعية', conP1:'أقدم هذه الموافقة طوعاً وبدون إكراه. أفهم أن لدي الحق في رفض أو تقييد أي جانب من جوانب رعايتي.',
+    conH2:'2. طبيعة الإجراء', conP2:'أفهم الإجراء الجراحي المقرر، والبدائل المتاحة، وعواقب رفض الإجراء.',
+    conH3:'3. المخاطر والفوائد', conP3:'لقد أُبلغت بالمخاطر والفوائد والمضاعفات المحتملة.',
+    conH4:'4. الخصوصية والبيانات', conP4:'أوافق على استخدام معلوماتي الطبية لأغراض رعايتي.',
+    conH5:'5. حق الانسحاب', conP5:'أفهم أن لي الحق في سحب موافقتي في أي وقت قبل بدء الإجراء.',
+    conPatLabel:'بيانات المريض', conFNLabel:'الاسم الكامل', conIDLabel:'رقم الهوية', conProcLabel:'الإجراء', conDateLabel:'التاريخ',
+    sigLabel:'توقيع المريض', tabDrawBtn:'ارسم التوقيع', tabTypeBtn:'اكتب الاسم',
+    sigHint:'ارسم توقيعك هنا', clearBtn:'مسح', sigTypePlaceholder:'اكتب اسمك الكامل',
+    sigError:'يرجى تقديم توقيعك.', checklistError:'يرجى تحديد جميع الخانات لتأكيد موافقتك.',
+    cc1Text:'أؤكد أنني قرأت وفهمت وثيقة الموافقة أعلاه.',
+    cc2Text:'أوافق طوعاً على الإجراء المقرر وأفوض الفريق الجراحي للمضي قدماً.',
+    cc3Text:'أفهم أنه يمكنني طرح الأسئلة في أي وقت قبل الإجراء أو بعده.',
+    backBtn4:'رجوع', btnSubmitConsent:'تقديم الموافقة',
+    doneLabel:'الخطوات المكتملة',
+    done1:'تم التقييم الأوّلي للقلق (قبل الفيديو)',
+    done2:'تمت مشاهدة الفيديو التعليمي',
+    done3:'تم التقييم البعدي للقلق (بعد الفيديو)',
+    done4:'تم توقيع الموافقة المستنيرة وتقديمها',
+    btnPrint:'طباعة الملخص',
+    loadingText:'جارٍ إرسال بياناتك بأمان...',
+    confirmTitleHigh:'اكتملت العملية', confirmTitleNormal:'كل شيء جاهز!',
+    confirmDesc:'اكتملت عملية ما قبل الجراحة لـ',
+    sLabelPt:'المريض', sLabelProc:'الإجراء', sLabelPre:'درجة ما قبل', sLabelPost:'درجة ما بعد',
+    sLabelAnx:'مستوى القلق', highLabel:'مرتفع', normalLabel:'طبيعي',
+    msgHighTitle:'سيتصل بك فريق الدعم',
+    msgHighBody:'استناداً إلى درجة تقييمك، سيتواصل معك أحد أعضاء فريق العمل الاجتماعي ودعم المرضى قريباً.',
+    msgNormalTitle:'أنت مستعد لإجراءاتك',
+    msgNormalBody:'يشير تقييمك إلى مستويات قلق طبيعية. تم إبلاغ فريق رعايتك وهم مستعدون لإجراءاتك.',
+    errSubmit:'فشل الإرسال. يرجى المحاولة مجدداً أو الاتصال بممرضة.',
+    qNum:'السؤال'
+  },
+  en: {
+    headerMain: 'King Abdulaziz University Hospital',
+    headerSub: 'Preoperative Patient Platform',
+    langBtn: 'عربي',
+    sl0:'Registration', sl1:'Pre-Video APAIS', sl2:'Educational Video', sl3:'Post-Video APAIS', sl4:'Consent', sl5:'Complete',
+    heroEyebrow:'Preoperative Care Program',
+    heroTitle:'Your Surgical Journey Begins Here',
+    heroDesc:'This short guided session will educate you about your procedure, assess your wellbeing, and complete your consent — all in one place.',
+    chip1:'Pre-Video Assessment', chip2:'Watch Educational Video', chip3:'Post-Video Assessment', chip4:'Sign Consent',
+    regLabel:'Patient Registration', regTitle:'Enter Your Details',
+    lblName:'Full Name', lblId:'National ID / Iqama Number', lblDob:'Date of Birth', lblProc:'Scheduled Procedure',
+    procPlaceholder:'Select procedure',
+    nameError:'Please enter your full name.', idError:'Please enter a valid 10-digit ID.', dobError:'Required.', procError:'Please select a procedure.',
+    btnBegin:'Begin Session',
+    ic1t:'Confidential & Secure', ic1d:'Your data is stored securely and accessed only by your care team.',
+    ic2t:'Takes 8–12 Minutes', ic2d:'A quick, comfortable process designed to prepare you for surgery.',
+    ic3t:'Support Available', ic3d:'High-anxiety patients are automatically connected with a social worker.',
+    preLabel:'Step 1 of 4', preTitle:'Anxiety Assessment — Before Video',
+    preBannerTitle:'Initial Assessment', preBannerDesc:'We measure your anxiety level before watching the educational video.',
+    apaisIntroText:'The Amsterdam Preoperative Anxiety and Information Scale (APAIS) helps us understand how you feel before your procedure. Please answer honestly — there are no right or wrong answers.',
+    preScoreLabel:'Current Score', preScoreHint:'Answer all questions to continue',
+    backBtn1:'Back', btnPreSubmit:'Next — Watch Video',
+    vidLabel:'Step 2 of 4', vidTitle:'Educational Video',
+    vidFallbackText:'If the video does not load, click here to watch it on YouTube',
+    sec1h:'Procedure Overview', sec2h:'Risks & Considerations', sec3h:'Recovery Expectations',
+    ov1:'Your surgeon will explain the specific steps of your operation prior to the procedure.',
+    ov2:'General anesthesia or regional anesthesia may be used depending on your case.',
+    ov3:'The surgical team includes a surgeon, anesthesiologist, and scrub nurse.',
+    ov4:'You will be monitored throughout the procedure with vital sign equipment.',
+    rk1:'All surgical procedures carry some risk, including infection, bleeding, or anesthesia reactions.',
+    rk2:'Your medical team has assessed your individual risk profile and taken steps to minimize complications.',
+    rk3:'Please inform your team of all current medications, allergies, and prior surgical history.',
+    rv1:'You will be taken to a recovery room immediately after surgery where your vitals are monitored.',
+    rv2:'Pain management will be provided. Report any discomfort promptly to your nurse.',
+    rv3:'Follow all discharge instructions regarding diet, activity restrictions, and follow-up appointments.',
+    rv4:'Recovery time varies by procedure and individual health. Your team will provide a personalised timeline.',
+    eduCheckText:'I have watched or read the educational material and I understand my scheduled procedure.',
+    eduCheckError:'Please confirm you have reviewed the educational material.',
+    backBtn2:'Back', btnPostProceed:'Next — Post-Video Assessment',
+    postLabel:'Step 3 of 4', postTitle:'Anxiety Assessment — After Video',
+    postBannerTitle:'Follow-up Assessment', postBannerDesc:'We re-measure your anxiety level after watching the educational video.',
+    postIntroText:'Now that you have watched the video, please answer the same questions again. Your responses help us measure the benefit of patient education.',
+    postScoreLabel:'Current Score', postScoreHint:'Answer all questions to continue',
+    backBtn3:'Back', btnPostSubmit:'Next — Consent',
+    conLabel:'Step 4 of 4', conTitle:'Informed Consent',
+    conHospName:'King Abdulaziz University Hospital', conHospSub:'Ministry of Education — Jeddah, Saudi Arabia',
+    conDocTitle:'Informed Consent for Surgical Procedure',
+    conDocIntro:'I, the undersigned patient, hereby provide my informed consent to undergo the scheduled surgical procedure at King Abdulaziz University Hospital (KAUH). I confirm the following:',
+    conH1:'1. Voluntary Consent', conP1:'I am providing this consent voluntarily and without coercion. I understand that I have the right to refuse or limit any aspect of my care.',
+    conH2:'2. Nature of the Procedure', conP2:'I understand the scheduled surgical procedure, available alternatives, and the consequences of refusing the procedure.',
+    conH3:'3. Risks and Benefits', conP3:'I have been informed of the risks, benefits, and potential complications associated with this procedure and anesthesia.',
+    conH4:'4. Privacy and Data', conP4:'I consent to the use of my medical information for the purposes of my care and clinical documentation.',
+    conH5:'5. Right to Withdraw', conP5:'I understand that I have the right to withdraw my consent at any time before the procedure commences.',
+    conPatLabel:'Patient Details', conFNLabel:'Full Name', conIDLabel:'ID Number', conProcLabel:'Procedure', conDateLabel:'Date',
+    sigLabel:'Patient Signature', tabDrawBtn:'Draw Signature', tabTypeBtn:'Type Name',
+    sigHint:'Draw your signature here', clearBtn:'Clear', sigTypePlaceholder:'Type your full name',
+    sigError:'Please provide your signature.', checklistError:'Please check all boxes to confirm your consent.',
+    cc1Text:'I confirm that I have read and understood the above consent document.',
+    cc2Text:'I voluntarily agree to the scheduled procedure and authorize the surgical team to proceed.',
+    cc3Text:'I understand that I may ask questions at any time before or after the procedure.',
+    backBtn4:'Back', btnSubmitConsent:'Submit Consent',
+    doneLabel:'Completed Steps',
+    done1:'Pre-video anxiety assessment completed',
+    done2:'Educational video watched',
+    done3:'Post-video anxiety assessment completed',
+    done4:'Informed consent signed and submitted',
+    btnPrint:'Print Summary',
+    loadingText:'Submitting your data securely...',
+    confirmTitleHigh:'Process Complete', confirmTitleNormal:'All Set!',
+    confirmDesc:'Your preoperative process has been completed for',
+    sLabelPt:'Patient', sLabelProc:'Procedure', sLabelPre:'Pre-Video Score', sLabelPost:'Post-Video Score',
+    sLabelAnx:'Anxiety Level', highLabel:'HIGH', normalLabel:'NORMAL',
+    msgHighTitle:'Support Team Will Contact You',
+    msgHighBody:'Based on your assessment score, a member of our social work and patient support team will reach out to you shortly.',
+    msgNormalTitle:'You Are Ready for Your Procedure',
+    msgNormalBody:'Your assessment indicates normal anxiety levels. Your care team has been notified and is prepared for your procedure.',
+    errSubmit:'Submission failed. Please try again or contact a nurse.',
+    qNum:'Question'
   }
+};
 
-  if (action === 'getDashboard') {
-    return handleGetDashboard(e);
-  }
+const PROC_AR_TO_EN = {
+  'جراحة عامة':'General Surgery','جراحة العظام':'Orthopedic Surgery','جراحة القلب':'Cardiac Surgery',
+  'جراحة بالمنظار':'Laparoscopic Surgery','جراحة الأنف والأذن والحنجرة':'ENT Surgery',
+  'جراحة المخ والأعصاب':'Neurosurgery','المسالك البولية':'Urology','طب العيون':'Ophthalmology','أخرى':'Other'
+};
 
-  // Health check
-  return buildResponse({ status: 'ok', message: 'KAUH Preoperative Platform API is running.' });
+/* ─── APPLY TRANSLATIONS ─────────────────────────────────── */
+function applyLang() {
+  const t = T[state.lang];
+  const isAr = state.lang === 'ar';
+  document.documentElement.lang = state.lang;
+  document.documentElement.dir  = isAr ? 'rtl' : 'ltr';
+
+  const ids = [
+    'headerMain','headerSub','sl0','sl1','sl2','sl3','sl4','sl5',
+    'heroEyebrow','heroTitle','heroDesc','chip1','chip2','chip3','chip4',
+    'regLabel','regTitle','lblName','lblId','lblDob','lblProc',
+    'nameError','idError','dobError','procError','btnBegin',
+    'ic1t','ic1d','ic2t','ic2d','ic3t','ic3d',
+    'preLabel','preTitle','preBannerTitle','preBannerDesc','apaisIntroText',
+    'preScoreLabel','preScoreHint','backBtn1','btnPreSubmit',
+    'vidLabel','vidTitle','vidFallbackText',
+    'sec1h','sec2h','sec3h',
+    'ov1','ov2','ov3','ov4','rk1','rk2','rk3','rv1','rv2','rv3','rv4',
+    'eduCheckText','eduCheckError','backBtn2','btnPostProceed',
+    'postLabel','postTitle','postBannerTitle','postBannerDesc','postIntroText',
+    'postScoreLabel','postScoreHint','backBtn3','btnPostSubmit',
+    'conLabel','conTitle','conHospName','conHospSub',
+    'conDocTitle','conDocIntro','conH1','conP1','conH2','conP2','conH3','conP3','conH4','conP4','conH5','conP5',
+    'conPatLabel','conFNLabel','conIDLabel','conProcLabel','conDateLabel',
+    'sigLabel','sigHint','clearBtn','sigError','checklistError',
+    'cc1Text','cc2Text','cc3Text','backBtn4','btnSubmitConsent',
+    'doneLabel','done1','done2','done3','done4','btnPrint','loadingText'
+  ];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && t[id] !== undefined) el.textContent = t[id];
+  });
+
+  // Tab buttons use different IDs
+  const tabDraw = document.getElementById('tabDraw');
+  const tabType = document.getElementById('tabType');
+  if (tabDraw) tabDraw.textContent = t.tabDrawBtn;
+  if (tabType) tabType.textContent = t.tabTypeBtn;
+
+  const sigTypeInput = document.getElementById('sigTypeInput');
+  if (sigTypeInput) sigTypeInput.placeholder = t.sigTypePlaceholder;
+
+  const procPlaceholder = document.getElementById('procPlaceholder');
+  if (procPlaceholder) procPlaceholder.textContent = t.procPlaceholder;
+
+  document.getElementById('langToggle').textContent = t.langBtn;
+
+  // Rebuild APAIS questions in new language
+  buildAPAIS('pre');
+  buildAPAIS('post');
+  updateStickyBar(state.currentScreen);
 }
 
-/**
- * Handle POST requests — main submission endpoint
- */
-function doPost(e) {
-  try {
-    ensureSheetsExist();
+function toggleLang() {
+  state.lang = state.lang === 'ar' ? 'en' : 'ar';
+  applyLang();
+}
 
-    let payload;
-    try {
-      payload = JSON.parse(e.postData.contents);
-    } catch (parseErr) {
-      return buildResponse({ success: false, error: 'Invalid JSON payload.' }, 400);
+/* ─── SCREEN NAVIGATION ─────────────────────────────────── */
+function goToScreen(n) {
+  document.getElementById('screen' + state.currentScreen).classList.remove('active');
+  document.getElementById('screen' + n).classList.add('active');
+  state.currentScreen = n;
+  updateProgressBar(n);
+  updateStickyBar(n);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (n === 4) {
+    // Consent screen
+    document.getElementById('consentName').textContent      = state.patient.name;
+    document.getElementById('consentId').textContent        = state.patient.id;
+    document.getElementById('consentProcedure').textContent = state.patient.procedure;
+    document.getElementById('consentDate').textContent      = new Date().toLocaleDateString(state.lang === 'ar' ? 'ar-SA' : 'en-GB');
+    if (!state.canvasInited) {
+      setTimeout(() => { initSignatureCanvas(); state.canvasInited = true; }, 100);
     }
+  }
+  if (n === 5) buildConfirmation();
+}
 
-    // Validate required fields
-    const validation = validatePayload(payload);
-    if (!validation.valid) {
-      return buildResponse({ success: false, error: validation.message }, 400);
-    }
-
-    const result = submitPatientData(payload);
-    return buildResponse(result);
-
-  } catch (err) {
-    logError(err, e.postData ? e.postData.contents : 'No payload');
-    return buildResponse({ success: false, error: 'Internal server error. Please contact support.' }, 500);
+function updateProgressBar(n) {
+  for (let i = 0; i <= 5; i++) {
+    const ps = document.getElementById('ps' + i);
+    ps.classList.remove('active', 'done');
+    if (i < n)  ps.classList.add('done');
+    if (i === n) ps.classList.add('active');
   }
 }
 
-
-/* ══════════════════════════════════════════════════════════════════════
- *  CORE FUNCTIONS
- * ══════════════════════════════════════════════════════════════════════ */
-
-/**
- * Main submission handler — writes to sheets and triggers notifications
- */
-function submitPatientData(data) {
-  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  const mainSheet = ss.getSheetByName(CONFIG.MAIN_SHEET_NAME);
-  const timestamp = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
-  const refNumber = generateReferenceNumber(data.patientId);
-  const anxietyLevel = Number(data.apaisScore) >= CONFIG.APAIS_THRESHOLD ? 'HIGH' : 'NORMAL';
-
-  // Write to main patient records sheet
-  mainSheet.appendRow([
-    timestamp,
-    sanitize(data.patientId),
-    sanitize(data.name),
-    sanitize(data.dob || ''),
-    sanitize(data.procedure),
-    Number(data.apaisScore),
-    anxietyLevel,
-    data.consentSigned === 'YES' ? 'YES' : 'NO',
-    'Web App',
-    refNumber
-  ]);
-
-  // Colour-code the row based on anxiety level
-  const lastRow = mainSheet.getLastRow();
-  if (anxietyLevel === 'HIGH') {
-    mainSheet.getRange(lastRow, 1, 1, MAIN_HEADERS.length)
-      .setBackground('#FFF0F0')
-      .setFontColor('#7B0000');
-  } else {
-    mainSheet.getRange(lastRow, 1, 1, MAIN_HEADERS.length)
-      .setBackground('#F0FFF4');
-  }
-
-  // If high anxiety → write to flagged sheet & send notifications
-  if (anxietyLevel === 'HIGH') {
-    flagHighAnxietyPatient(ss, data, timestamp, refNumber);
-    if (CONFIG.SEND_EMAILS) {
-      sendSocialWorkerAlert(data, refNumber, Number(data.apaisScore));
-    }
-  }
-
-  // Write to submission log
-  logSubmission(ss, data, timestamp, refNumber, anxietyLevel);
-
-  return {
-    success: true,
-    referenceNumber: refNumber,
-    anxietyLevel: anxietyLevel,
-    message: anxietyLevel === 'HIGH'
-      ? 'Your submission was received. A support team member will contact you.'
-      : 'Your submission was received. You are cleared for your procedure.'
+/* ─── MOBILE STICKY BAR ─────────────────────────────────── */
+function updateStickyBar(n) {
+  const bar = document.getElementById('mobileStickyBar');
+  if (!bar) return;
+  const t = T[state.lang];
+  const btns = {
+    0: `<button class="btn btn-primary" onclick="startProcess()"><span>${t.btnBegin}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>`,
+    1: `<button class="btn btn-primary" onclick="submitPreAPAIS()"><span>${t.btnPreSubmit}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>`,
+    2: `<button class="btn btn-primary" onclick="proceedToPostAPAIS()"><span>${t.btnPostProceed}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>`,
+    3: `<button class="btn btn-primary" onclick="submitPostAPAIS()"><span>${t.btnPostSubmit}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>`,
+    4: `<button class="btn btn-gold" onclick="submitConsent()"><span>${t.btnSubmitConsent}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></button>`,
+    5: `<button class="btn btn-outline" onclick="window.print()"><span>${t.btnPrint}</span></button>`
   };
+  bar.innerHTML = btns[n] || '';
 }
 
-/**
- * Write high-anxiety patient to the Flagged Patients sheet
- */
-function flagHighAnxietyPatient(ss, data, timestamp, refNumber) {
-  const flagSheet = ss.getSheetByName(CONFIG.HIGH_ANXIETY_SHEET);
-  flagSheet.appendRow([
-    timestamp,
-    refNumber,
-    sanitize(data.patientId),
-    sanitize(data.name),
-    sanitize(data.procedure),
-    Number(data.apaisScore),
-    'HIGH',
-    'PENDING REVIEW',
-    '',
-    ''
-  ]);
+/* ─── INIT ───────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  applyLang(); // set Arabic default
+  buildAPAIS('pre');
+  buildAPAIS('post');
+  updateStickyBar(0);
+});
 
-  // Bold and colour the new row
-  const lastRow = flagSheet.getLastRow();
-  flagSheet.getRange(lastRow, 1, 1, FLAG_HEADERS.length)
-    .setBackground('#FFF5E6')
-    .setFontWeight('normal');
-  flagSheet.getRange(lastRow, 7)
-    .setFontColor('#B30000')
-    .setFontWeight('bold');
+/* ─── REGISTRATION ───────────────────────────────────────── */
+function startProcess() {
+  const name = document.getElementById('patientName').value.trim();
+  const id   = document.getElementById('patientId').value.trim();
+  const dob  = document.getElementById('patientDob').value;
+  const proc = document.getElementById('patientProcedure').value;
+  let valid = true;
+
+  // Clear previous errors
+  ['nameError','idError','dobError','procError'].forEach(e => document.getElementById(e).classList.remove('visible'));
+  ['patientName','patientId','patientDob','patientProcedure'].forEach(e => document.getElementById(e).classList.remove('error'));
+
+  if (!name || name.length < 2) { showError('nameError','patientName'); valid = false; }
+  if (!/^\d{10}$/.test(id))     { showError('idError','patientId');     valid = false; }
+  if (!dob)                     { showError('dobError','patientDob');    valid = false; }
+  if (!proc)                    { showError('procError','patientProcedure'); valid = false; }
+  if (!valid) return;
+
+  state.patient = { name, id, dob, procedure: proc };
+  document.getElementById('procedureBadge').textContent = proc;
+  goToScreen(1);
 }
 
-/**
- * Send email alert to social worker
- */
-function sendSocialWorkerAlert(data, refNumber, score) {
-  const subject = `[KAUH] High Anxiety Patient Flagged — Ref: ${refNumber}`;
-  const htmlBody = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <div style="background: #00562B; padding: 20px 24px; border-radius: 8px 8px 0 0;">
-        <h2 style="color: white; margin: 0; font-size: 18px;">King Abdulaziz University Hospital</h2>
-        <p style="color: rgba(255,255,255,0.8); margin: 4px 0 0; font-size: 13px;">Preoperative Patient Support Alert</p>
+/* ─── BUILD APAIS QUESTIONS ─────────────────────────────── */
+function buildAPAIS(phase) {
+  const containerId = phase === 'pre' ? 'preApaisQuestions' : 'postApaisQuestions';
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const scores = phase === 'pre' ? state.preScores : state.postScores;
+  const labels = likertLabels[state.lang];
+  const prefix = phase;
+
+  container.innerHTML = apaisQuestions.map((q, i) => `
+    <div class="q-card ${scores[i] ? 'answered' : ''}" id="${prefix}q${i}">
+      <div class="q-number">${T[state.lang].qNum} ${i + 1}</div>
+      <div class="q-text">${q[state.lang]}</div>
+      <div class="likert-row">
+        ${[1,2,3,4,5].map(v => `
+          <label class="likert-option">
+            <input type="radio" name="${prefix}q${i}" value="${v}" ${scores[i] === v ? 'checked' : ''}
+              onchange="updateScore('${prefix}', ${i}, ${v})">
+            <div class="likert-dot"></div>
+            <div class="likert-label-text">${labels[v-1]}</div>
+          </label>`).join('')}
       </div>
-      <div style="background: #fff8f8; border: 1px solid #fecaca; padding: 24px; border-radius: 0 0 8px 8px;">
-        <div style="background: #DC2626; color: white; padding: 12px 18px; border-radius: 6px; margin-bottom: 24px;">
-          <strong>HIGH ANXIETY — IMMEDIATE ATTENTION REQUIRED</strong>
-        </div>
-        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-          <tr><td style="padding: 8px 12px; font-weight: bold; color: #555; width: 40%;">Reference Number</td><td style="padding: 8px 12px; color: #111;">${refNumber}</td></tr>
-          <tr style="background: #fafafa;"><td style="padding: 8px 12px; font-weight: bold; color: #555;">Patient Name</td><td style="padding: 8px 12px; color: #111;">${sanitize(data.name)}</td></tr>
-          <tr><td style="padding: 8px 12px; font-weight: bold; color: #555;">Patient ID</td><td style="padding: 8px 12px; color: #111;">${sanitize(data.patientId)}</td></tr>
-          <tr style="background: #fafafa;"><td style="padding: 8px 12px; font-weight: bold; color: #555;">Scheduled Procedure</td><td style="padding: 8px 12px; color: #111;">${sanitize(data.procedure)}</td></tr>
-          <tr><td style="padding: 8px 12px; font-weight: bold; color: #555;">APAIS Score</td><td style="padding: 8px 12px; color: #DC2626; font-weight: bold;">${score} / 30 (Threshold: ${CONFIG.APAIS_THRESHOLD})</td></tr>
-          <tr style="background: #fafafa;"><td style="padding: 8px 12px; font-weight: bold; color: #555;">Submission Time</td><td style="padding: 8px 12px; color: #111;">${Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'dd MMM yyyy, HH:mm')}</td></tr>
-        </table>
-        <div style="margin-top: 24px; padding: 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px;">
-          <strong style="font-size: 13px;">Action Required:</strong>
-          <p style="font-size: 13px; margin: 6px 0 0;">Please contact this patient before their scheduled procedure to provide additional emotional support and counselling.</p>
-        </div>
-        <p style="font-size: 12px; color: #999; margin-top: 20px;">This is an automated notification from the KAUH Preoperative Patient Platform.</p>
+      <div class="likert-extremes">
+        <span>${labels[0]}</span>
+        <span>${labels[4]}</span>
       </div>
-    </div>
-  `;
-
-  GmailApp.sendEmail(CONFIG.SOCIAL_WORKER_EMAIL, subject, '', { htmlBody });
-
-  // Also notify admin
-  GmailApp.sendEmail(
-    CONFIG.ADMIN_EMAIL,
-    `[KAUH] Copy: High Anxiety Patient — Ref: ${refNumber}`,
-    `Patient ${sanitize(data.name)} (ID: ${sanitize(data.patientId)}) scored ${score}/30 on APAIS. Ref: ${refNumber}`,
-    { htmlBody }
-  );
+    </div>`).join('');
 }
 
-
-/* ══════════════════════════════════════════════════════════════════════
- *  DASHBOARD / REPORTING
- * ══════════════════════════════════════════════════════════════════════ */
-
-/**
- * GET /getPatientData?patientId=XXXXXXXXXX
- * Returns patient record for dashboard lookups
- */
-function handleGetPatientData(e) {
-  const patientId = e.parameter.patientId || '';
-  if (!patientId) {
-    return buildResponse({ success: false, error: 'patientId parameter required.' });
+function updateScore(phase, idx, val) {
+  if (phase === 'pre') {
+    state.preScores[idx] = val;
+    state.preTotalScore = state.preScores.reduce((a,b) => a+b, 0);
+    const answered = state.preScores.filter(s => s > 0).length;
+    document.getElementById('preLiveScore').textContent = answered === 6 ? state.preTotalScore : '—';
+    if (answered === 6) document.getElementById('preLiveScore').textContent = state.preTotalScore + ' / 30';
+  } else {
+    state.postScores[idx] = val;
+    state.postTotalScore = state.postScores.reduce((a,b) => a+b, 0);
+    const answered = state.postScores.filter(s => s > 0).length;
+    document.getElementById('postLiveScore').textContent = answered === 6 ? state.postTotalScore + ' / 30' : '—';
   }
-  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(CONFIG.MAIN_SHEET_NAME);
-  const data = sheet.getDataRange().getValues();
+  const cardId = (phase === 'pre' ? 'pre' : 'post') + 'q' + idx;
+  document.getElementById(cardId)?.classList.add('answered');
+}
 
-  const records = [];
-  for (let i = 1; i < data.length; i++) { // skip header row
-    if (String(data[i][1]) === String(patientId)) {
-      records.push({
-        timestamp:     data[i][0],
-        patientId:     data[i][1],
-        name:          data[i][2],
-        dob:           data[i][3],
-        procedure:     data[i][4],
-        apaisScore:    data[i][5],
-        anxietyLevel:  data[i][6],
-        consentSigned: data[i][7],
-        refNumber:     data[i][9]
+/* ─── PRE-VIDEO APAIS SUBMIT ─────────────────────────────── */
+function submitPreAPAIS() {
+  const unanswered = state.preScores.filter(s => s === 0).length;
+  if (unanswered > 0) {
+    showToast(state.lang === 'ar' ? 'يرجى الإجابة على جميع الأسئلة.' : 'Please answer all questions.', 'error');
+    return;
+  }
+  state.preTotalScore   = state.preScores.reduce((a,b) => a+b, 0);
+  state.preAnxietyLevel = state.preTotalScore >= APAIS_THRESHOLD ? 'HIGH' : 'NORMAL';
+  goToScreen(2);
+}
+
+/* ─── VIDEO ──────────────────────────────────────────────── */
+function toggleEduSection(id) {
+  const sec = document.getElementById(id);
+  sec.classList.toggle('open');
+}
+
+function toggleEduCheck() {
+  state.eduChecked = !state.eduChecked;
+  const box = document.getElementById('eduCheckBox');
+  box.classList.toggle('checked', state.eduChecked);
+  document.getElementById('eduCheckError').classList.remove('visible');
+}
+
+/* ─── PROCEED TO POST-VIDEO APAIS ────────────────────────── */
+function proceedToPostAPAIS() {
+  if (!state.eduChecked) {
+    document.getElementById('eduCheckError').classList.add('visible');
+    return;
+  }
+  goToScreen(3);
+}
+
+/* ─── POST-VIDEO APAIS SUBMIT ────────────────────────────── */
+function submitPostAPAIS() {
+  const unanswered = state.postScores.filter(s => s === 0).length;
+  if (unanswered > 0) {
+    showToast(state.lang === 'ar' ? 'يرجى الإجابة على جميع الأسئلة.' : 'Please answer all questions.', 'error');
+    return;
+  }
+  state.postTotalScore   = state.postScores.reduce((a,b) => a+b, 0);
+  state.postAnxietyLevel = state.postTotalScore >= APAIS_THRESHOLD ? 'HIGH' : 'NORMAL';
+  goToScreen(4);
+}
+
+/* ─── CONSENT ────────────────────────────────────────────── */
+function toggleCheck(id) {
+  state.consentChecks[id] = !state.consentChecks[id];
+  const el = document.getElementById(id);
+  el.classList.toggle('checked', state.consentChecks[id]);
+  document.getElementById('checklistError').classList.remove('visible');
+}
+
+function updateConsentDate() {
+  const el = document.getElementById('consentDate');
+  if (el) el.textContent = new Date().toLocaleDateString(state.lang === 'ar' ? 'ar-SA' : 'en-GB');
+}
+
+/* ─── SIGNATURE ──────────────────────────────────────────── */
+function initSignatureCanvas() {
+  const c = document.getElementById('sigCanvas');
+  const old = c.cloneNode(false);
+  c.parentNode.replaceChild(old, c);
+  const canvas = old;
+  dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width || 500;
+  const h = 130;
+  canvas.width  = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.height = h + 'px';
+  sigCtx = canvas.getContext('2d');
+  sigCtx.scale(dpr, dpr);
+  sigCtx.strokeStyle = '#1a2e1a';
+  sigCtx.lineWidth   = 2.2;
+  sigCtx.lineCap     = 'round';
+  sigCtx.lineJoin    = 'round';
+  hasSig = false;
+  document.getElementById('sigHint').style.display = '';
+
+  let isDrawing = false;
+  canvas.addEventListener('mousedown', e => { isDrawing = true; sigCtx.beginPath(); sigCtx.moveTo(getPos(e,canvas).x, getPos(e,canvas).y); document.getElementById('sigHint').style.display='none'; });
+  canvas.addEventListener('mousemove', e => { if (!isDrawing) return; hasSig = true; sigCtx.lineTo(getPos(e,canvas).x, getPos(e,canvas).y); sigCtx.stroke(); });
+  canvas.addEventListener('mouseup',   () => isDrawing = false);
+  canvas.addEventListener('mouseleave',() => isDrawing = false);
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); isDrawing=true; sigCtx.beginPath(); sigCtx.moveTo(getTouchPos(e,canvas).x, getTouchPos(e,canvas).y); document.getElementById('sigHint').style.display='none'; }, { passive: false });
+  canvas.addEventListener('touchmove',  e => { e.preventDefault(); if (!isDrawing) return; hasSig=true; sigCtx.lineTo(getTouchPos(e,canvas).x, getTouchPos(e,canvas).y); sigCtx.stroke(); }, { passive: false });
+  canvas.addEventListener('touchend',   e => { e.preventDefault(); isDrawing=false; }, { passive: false });
+}
+
+function getPos(e, canvas) {
+  const r = canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+function getTouchPos(e, canvas) {
+  const r = canvas.getBoundingClientRect();
+  const t = e.touches[0];
+  return { x: t.clientX - r.left, y: t.clientY - r.top };
+}
+function clearSignature() {
+  const c = document.getElementById('sigCanvas');
+  sigCtx.clearRect(0, 0, c.width / dpr, c.height / dpr);
+  hasSig = false;
+  document.getElementById('sigHint').style.display = '';
+}
+function switchSigTab(mode) {
+  state.sigMode = mode;
+  document.getElementById('tabDraw').classList.toggle('active', mode === 'draw');
+  document.getElementById('tabType').classList.toggle('active', mode === 'type');
+  document.getElementById('drawArea').classList.toggle('hidden', mode !== 'draw');
+  document.getElementById('typeArea').classList.toggle('hidden', mode !== 'type');
+}
+
+function submitConsent() {
+  let valid = true;
+  if (state.sigMode === 'draw') {
+    if (!hasSig) { document.getElementById('sigError').classList.add('visible'); valid = false; }
+    else { document.getElementById('sigError').classList.remove('visible'); state.sigData = 'drawn'; }
+  } else {
+    const typed = document.getElementById('sigTypeInput').value.trim();
+    if (!typed) { document.getElementById('sigError').classList.add('visible'); valid = false; }
+    else { document.getElementById('sigError').classList.remove('visible'); state.sigData = typed; }
+  }
+  const allChecked = state.consentChecks.cc1 && state.consentChecks.cc2 && state.consentChecks.cc3;
+  if (!allChecked) { document.getElementById('checklistError').classList.add('visible'); valid = false; }
+  else { document.getElementById('checklistError').classList.remove('visible'); }
+  if (!valid) return;
+  state.consentSigned = true;
+  submitToBackend();
+}
+
+/* ─── BACKEND SUBMISSION ─────────────────────────────────── */
+async function submitToBackend() {
+  document.getElementById('loadingOverlay').classList.add('active');
+  const procEn = PROC_AR_TO_EN[state.patient.procedure] || state.patient.procedure;
+  const payload = {
+    patientId:        state.patient.id,
+    name:             state.patient.name,
+    dob:              state.patient.dob,
+    procedure:        procEn,
+    procedureDisplay: state.patient.procedure,
+    preApaisScore:    state.preTotalScore,
+    preApaisScores:   state.preScores,
+    preAnxietyLevel:  state.preAnxietyLevel,
+    postApaisScore:   state.postTotalScore,
+    postApaisScores:  state.postScores,
+    postAnxietyLevel: state.postAnxietyLevel,
+    scoreDelta:       state.postTotalScore - state.preTotalScore,
+    consentSigned:    'YES',
+    language:         state.lang,
+    timestamp:        new Date().toISOString()
+  };
+
+  try {
+    if (GAS_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+      await new Promise(r => setTimeout(r, 1800)); // mock delay
+    } else {
+      await fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
     }
-  }
-
-  return buildResponse({ success: true, records });
-}
-
-/**
- * GET /getDashboard
- * Returns aggregate stats for admin dashboard
- */
-function handleGetDashboard(e) {
-  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(CONFIG.MAIN_SHEET_NAME);
-  const data = sheet.getDataRange().getValues();
-
-  let total = 0, highCount = 0, normalCount = 0, consentCount = 0;
-  const procedureCounts = {};
-  const scoreDistribution = Array(31).fill(0);
-
-  for (let i = 1; i < data.length; i++) {
-    total++;
-    const level = data[i][6];
-    const score = Number(data[i][5]);
-    const proc  = data[i][4];
-    const consent = data[i][7];
-
-    if (level === 'HIGH')   highCount++;
-    if (level === 'NORMAL') normalCount++;
-    if (consent === 'YES')  consentCount++;
-    procedureCounts[proc] = (procedureCounts[proc] || 0) + 1;
-    if (score >= 0 && score <= 30) scoreDistribution[score]++;
-  }
-
-  return buildResponse({
-    success: true,
-    stats: {
-      total,
-      highAnxiety: highCount,
-      normalAnxiety: normalCount,
-      consentSigned: consentCount,
-      highAnxietyRate: total > 0 ? ((highCount / total) * 100).toFixed(1) : 0,
-      procedureBreakdown: procedureCounts,
-      scoreDistribution
-    }
-  });
-}
-
-
-/* ══════════════════════════════════════════════════════════════════════
- *  SHEET MANAGEMENT
- * ══════════════════════════════════════════════════════════════════════ */
-
-/**
- * Ensure all required sheets exist with proper headers
- */
-function ensureSheetsExist() {
-  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  createSheetIfMissing(ss, CONFIG.MAIN_SHEET_NAME,    MAIN_HEADERS, '#00562B');
-  createSheetIfMissing(ss, CONFIG.HIGH_ANXIETY_SHEET, FLAG_HEADERS, '#B30000');
-  createSheetIfMissing(ss, CONFIG.LOG_SHEET_NAME,
-    ['Timestamp','Ref Number','Patient ID','Score','Anxiety Level','Consent','User Agent'], '#1E3A5F');
-}
-
-function createSheetIfMissing(ss, name, headers, headerBgColor) {
-  let sheet = ss.getSheetByName(name);
-  if (!sheet) {
-    sheet = ss.insertSheet(name);
-    const headerRange = sheet.getRange(1, 1, 1, headers.length);
-    headerRange.setValues([headers]);
-    headerRange
-      .setBackground(headerBgColor)
-      .setFontColor('#FFFFFF')
-      .setFontWeight('bold')
-      .setFontSize(11);
-    sheet.setFrozenRows(1);
-    sheet.setColumnWidth(1, 160); // Timestamp
-    sheet.setColumnWidth(2, 130); // ID
-    sheet.setColumnWidth(3, 200); // Name
-  }
-  return sheet;
-}
-
-function logSubmission(ss, data, timestamp, refNumber, anxietyLevel) {
-  const logSheet = ss.getSheetByName(CONFIG.LOG_SHEET_NAME);
-  logSheet.appendRow([
-    timestamp,
-    refNumber,
-    sanitize(data.patientId),
-    Number(data.apaisScore),
-    anxietyLevel,
-    data.consentSigned,
-    'Web App'
-  ]);
-}
-
-function logError(err, payload) {
-  try {
-    const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-    let errSheet = ss.getSheetByName('Error Log');
-    if (!errSheet) {
-      errSheet = ss.insertSheet('Error Log');
-      errSheet.appendRow(['Timestamp', 'Error', 'Payload']);
-    }
-    errSheet.appendRow([new Date().toISOString(), err.toString(), String(payload).substring(0, 500)]);
-  } catch (e) {
-    // fail silently
+    document.getElementById('loadingOverlay').classList.remove('active');
+    goToScreen(5);
+  } catch (err) {
+    document.getElementById('loadingOverlay').classList.remove('active');
+    showToast(T[state.lang].errSubmit, 'error');
   }
 }
 
-
-/* ══════════════════════════════════════════════════════════════════════
- *  UTILITIES
- * ══════════════════════════════════════════════════════════════════════ */
-
-/**
- * Input sanitisation — strips HTML/script tags
- */
-function sanitize(value) {
-  if (typeof value !== 'string') return String(value || '');
-  return value.replace(/<[^>]*>/g, '').replace(/[<>'"]/g, '').trim().substring(0, 500);
-}
-
-/**
- * Generate a unique reference number
- */
-function generateReferenceNumber(patientId) {
-  const now = new Date();
-  const datePart = Utilities.formatDate(now, CONFIG.TIMEZONE, 'yyyyMMdd');
-  const timePart = Utilities.formatDate(now, CONFIG.TIMEZONE, 'HHmmss');
-  const idSuffix = String(patientId).slice(-4);
-  return `KAUH-${datePart}-${timePart}-${idSuffix}`;
-}
-
-/**
- * Validate incoming payload fields
- */
-function validatePayload(data) {
-  if (!data.patientId || !/^\d{10}$/.test(String(data.patientId))) {
-    return { valid: false, message: 'Invalid or missing patientId (must be 10 digits).' };
-  }
-  if (!data.name || String(data.name).trim().length < 2) {
-    return { valid: false, message: 'Invalid or missing patient name.' };
-  }
-  if (!data.procedure || String(data.procedure).trim().length < 2) {
-    return { valid: false, message: 'Invalid or missing procedure.' };
-  }
-  const score = Number(data.apaisScore);
-  if (isNaN(score) || score < 6 || score > 30) {
-    return { valid: false, message: 'APAIS score must be between 6 and 30.' };
-  }
-  if (data.consentSigned !== 'YES') {
-    return { valid: false, message: 'Consent must be signed (YES).' };
-  }
-  return { valid: true };
-}
-
-/**
- * Build a JSON response with CORS headers
- */
-function buildResponse(data, statusCode) {
-  const output = ContentService
-    .createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
-  return output;
-}
-
-
-/* ══════════════════════════════════════════════════════════════════════
- *  SCHEDULED REPORTS  (optional — attach to a time-based trigger)
- * ══════════════════════════════════════════════════════════════════════ */
-
-/**
- * Daily digest email of high-anxiety patients
- * To enable: Triggers → Add Trigger → dailyReport → Time-based → Day timer
- */
-function dailyReport() {
-  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  const flagSheet = ss.getSheetByName(CONFIG.HIGH_ANXIETY_SHEET);
-  const data = flagSheet.getDataRange().getValues();
-
-  const today = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd');
-  const todayRows = data.slice(1).filter(row => String(row[0]).startsWith(today));
-
-  if (todayRows.length === 0) return;
-
-  let tableRows = todayRows.map(row => `
-    <tr>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;">${row[1]}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;">${row[3]}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;">${row[2]}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;">${row[4]}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;color:#DC2626;font-weight:bold;">${row[5]}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;">${row[7]}</td>
-    </tr>
-  `).join('');
-
-  const htmlBody = `
-    <div style="font-family:Arial,sans-serif;max-width:700px;">
-      <div style="background:#00562B;padding:20px 24px;border-radius:8px 8px 0 0;">
-        <h2 style="color:white;margin:0;font-size:18px;">KAUH — Daily High Anxiety Report</h2>
-        <p style="color:rgba(255,255,255,0.7);margin:4px 0 0;font-size:12px;">${today}</p>
-      </div>
-      <div style="padding:24px;border:1px solid #e5e7eb;border-top:none;">
-        <p style="font-size:14px;margin-bottom:20px;">${todayRows.length} high-anxiety patient(s) flagged today:</p>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-          <thead>
-            <tr style="background:#f9fafb;">
-              <th style="padding:10px 12px;text-align:left;color:#555;">Ref</th>
-              <th style="padding:10px 12px;text-align:left;color:#555;">Name</th>
-              <th style="padding:10px 12px;text-align:left;color:#555;">ID</th>
-              <th style="padding:10px 12px;text-align:left;color:#555;">Procedure</th>
-              <th style="padding:10px 12px;text-align:left;color:#555;">Score</th>
-              <th style="padding:10px 12px;text-align:left;color:#555;">Status</th>
-            </tr>
-          </thead>
-          <tbody>${tableRows}</tbody>
-        </table>
-      </div>
+/* ─── CONFIRMATION SCREEN ────────────────────────────────── */
+function buildConfirmation() {
+  const t    = T[state.lang];
+  const high = state.postAnxietyLevel === 'HIGH';
+  document.getElementById('confirmHero').innerHTML = `
+    <div class="status-icon ${high ? 'red' : 'green'}">
+      ${high
+        ? `<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01"/></svg>`
+        : `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`}
     </div>
-  `;
+    <h2 class="display-title" style="font-size:clamp(20px,5vw,28px);margin-bottom:10px;">
+      ${high ? t.confirmTitleHigh : t.confirmTitleNormal}
+    </h2>
+    <p class="body-text">${t.confirmDesc} <strong>${state.patient.name}</strong>.</p>`;
 
-  GmailApp.sendEmail(
-    CONFIG.SOCIAL_WORKER_EMAIL,
-    `[KAUH] Daily Anxiety Report — ${todayRows.length} High-Anxiety Patient(s) — ${today}`,
-    '',
-    { htmlBody }
-  );
+  const delta = state.postTotalScore - state.preTotalScore;
+  const deltaStr = delta <= 0
+    ? (state.lang === 'ar' ? `▼ ${Math.abs(delta)} انخفض` : `▼ ${Math.abs(delta)} decrease`)
+    : (state.lang === 'ar' ? `▲ ${delta} ارتفع` : `▲ ${delta} increase`);
+
+  document.getElementById('summaryGrid').innerHTML = `
+    <div class="summary-item">
+      <div class="s-label">${t.sLabelPt}</div>
+      <div class="s-value" style="font-size:clamp(12px,3vw,14px);word-break:break-word;">${state.patient.name}</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-label">${t.sLabelProc}</div>
+      <div class="s-value" style="font-size:clamp(12px,3vw,14px);word-break:break-word;">${state.patient.procedure}</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-label">${t.sLabelPre}</div>
+      <div class="s-value ${state.preAnxietyLevel === 'HIGH' ? 'score-high' : 'score-normal'}">${state.preTotalScore} / 30</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-label">${t.sLabelPost}</div>
+      <div class="s-value ${high ? 'score-high' : 'score-normal'}">${state.postTotalScore} / 30</div>
+    </div>
+    <div class="summary-item" style="grid-column:span 2;">
+      <div class="s-label">${state.lang === 'ar' ? 'التغيير' : 'Change'}</div>
+      <div class="s-value" style="font-size:14px;color:${delta<=0?'var(--green-mid)':'#DC2626'}">${deltaStr}</div>
+    </div>`;
+
+  document.getElementById('messageBox').innerHTML = high ? `
+    <div class="message-box high">
+      <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.18 6.18l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+      <div><h4>${t.msgHighTitle}</h4><p>${t.msgHighBody}</p></div>
+    </div>` : `
+    <div class="message-box normal">
+      <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <div><h4>${t.msgNormalTitle}</h4><p>${t.msgNormalBody}</p></div>
+    </div>`;
 }
+
+/* ─── HELPERS ────────────────────────────────────────────── */
+function showError(errId, inputId) {
+  document.getElementById(errId).classList.add('visible');
+  document.getElementById(inputId).classList.add('error');
+}
+
+function showToast(msg, type = 'success') {
+  const wrap = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `
+    ${type === 'success'
+      ? `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`
+      : `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`}
+    <span>${msg}</span>`;
+  wrap.appendChild(t);
+  setTimeout(() => { if (t.parentNode) t.remove(); }, 4200);
+}
+
+window.addEventListener('resize', () => {
+  if (state.currentScreen !== 4 || !state.canvasInited) return;
+  state.canvasInited = false;
+  requestAnimationFrame(() => setTimeout(() => {
+    initSignatureCanvas();
+    state.canvasInited = true;
+    hasSig = false;
+    document.getElementById('sigHint').style.display = '';
+  }, 80));
+});
+</script>
+</body>
+</html>
