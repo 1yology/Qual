@@ -33,7 +33,7 @@
       --radius-xl:    32px;
       --transition:   all .28s cubic-bezier(.4,0,.2,1);
     }
-
+ 
     /* ─── RESET ─────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
@@ -49,13 +49,13 @@
     img { display: block; max-width: 100%; }
     button { cursor: pointer; font-family: inherit; }
     input, textarea, select { font-family: inherit; }
-
+ 
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: var(--gray-100); }
     ::-webkit-scrollbar-thumb { background: var(--green-light); border-radius: 3px; }
-
+ 
     .app-wrapper { min-height: 100vh; display: flex; flex-direction: column; }
-
+ 
     /* ─── HEADER ─────────────────────────────────────── */
     .site-header {
       background: var(--green-deep);
@@ -95,7 +95,7 @@
       flex-shrink: 0;
     }
     .lang-toggle:hover { background: rgba(255,255,255,.2); }
-
+ 
     /* ─── PROGRESS BAR ──────────────────────────────── */
     .progress-bar-wrap {
       background: var(--white);
@@ -143,11 +143,11 @@
     .step-label { font-size: 11px; font-weight: 500; color: var(--gray-400); white-space: nowrap; transition: var(--transition); }
     .progress-step.active .step-label { color: var(--green-mid); font-weight: 700; }
     .progress-step.done  .step-label  { color: var(--green-mid); }
-
+ 
     /* ─── MAIN ──────────────────────────────────────── */
     .main-content { flex: 1; padding: 48px 24px 80px; }
     .page-container { max-width: 840px; margin: 0 auto; }
-
+ 
     /* ─── SCREEN ─────────────────────────────────────── */
     .screen { display: none; animation: fadeUp .4s ease both; }
     .screen.active { display: block; }
@@ -155,7 +155,7 @@
       from { opacity: 0; transform: translateY(18px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-
+ 
     /* ─── TYPOGRAPHY ─────────────────────────────────── */
     .display-title {
       font-family: 'Tajawal', 'Playfair Display', serif;
@@ -171,7 +171,7 @@
       color: var(--gold); margin-bottom: 10px;
     }
     .body-text { font-size: 15px; color: var(--gray-600); line-height: 1.75; }
-
+ 
     /* ─── CARD ──────────────────────────────────────── */
     .card {
       background: var(--white);
@@ -181,7 +181,7 @@
       border: 1px solid var(--gray-200);
     }
     @media (max-width: 600px) { .card { padding: 24px 18px; } }
-
+ 
     /* ─── BUTTONS ────────────────────────────────────── */
     .btn {
       display: inline-flex; align-items: center; gap: 10px;
@@ -203,17 +203,17 @@
     .btn.loading .spinner { display: block; }
     .btn.loading .btn-text { opacity: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
+ 
     /* ─── DIVIDER ────────────────────────────────────── */
     .divider { height: 1px; background: var(--gray-200); margin: 32px 0; }
-
+ 
     /* ─── BADGE ─────────────────────────────────────── */
     .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; }
     .badge-green  { background: var(--green-pale); color: var(--green-deep); }
     .badge-gold   { background: var(--gold-pale); color: #7a5c20; }
     .badge-red    { background: #FEF2F2; color: #B91C1C; }
     .badge-blue   { background: #EFF6FF; color: #1D4ED8; }
-
+ 
     /* ─── LANDING HERO ───────────────────────────────── */
     .landing-hero {
       background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 60%, var(--green-light) 100%);
@@ -237,14 +237,14 @@
       font-size: 13px; color: var(--white); font-weight: 600;
     }
     .hero-step-chip .num { width: 20px; height: 20px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
-
+ 
     .landing-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
     .info-card { background: var(--white); border-radius: var(--radius-md); padding: 24px; border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm); }
     .info-card-icon { width: 44px; height: 44px; background: var(--green-pale); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
     .info-card-icon svg { width: 22px; height: 22px; stroke: var(--green-mid); fill: none; stroke-width: 1.8; }
     .info-card h3 { font-size: 15px; font-weight: 700; color: var(--gray-800); margin-bottom: 6px; }
     .info-card p  { font-size: 13px; color: var(--gray-600); line-height: 1.6; }
-
+ 
     /* ─── FORM ELEMENTS ──────────────────────────────── */
     .patient-id-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
     .input-wrap { position: relative; flex: 1; min-width: 0; }
@@ -263,29 +263,63 @@
     .input-group { margin-bottom: 20px; }
     .field-error { font-size: 12px; color: #DC2626; margin-top: 5px; display: none; }
     .field-error.visible { display: block; }
-
+ 
     /* ─── VIDEO ──────────────────────────────────────── */
-    .video-frame-wrap {
-      background: #000;
+    /* ─── VIDEO PLAYER ───────────────────────────────── */
+    /* ─── VIDEO PLAYER ───────────────────────────────── */
+    .video-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
       border-radius: var(--radius-md);
       overflow: hidden;
-      aspect-ratio: 16/9;
-      margin-bottom: 12px;
-      position: relative;
+      background: #000;
       box-shadow: var(--shadow-md);
+      margin-bottom: 24px;
     }
-    .video-frame-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
-    .video-fallback-link {
-      display: flex; align-items: center; gap: 10px;
-      background: var(--green-pale); border: 1px solid #C5E0D0;
-      border-radius: var(--radius-sm); padding: 12px 18px;
-      margin-bottom: 24px; text-decoration: none;
-      color: var(--green-deep); font-size: 13px; font-weight: 600;
-      transition: var(--transition);
+    .video-thumb-overlay {
+      position: absolute; inset: 0;
+      cursor: pointer;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 16px;
     }
-    .video-fallback-link:hover { background: #d4eddf; }
-    .video-fallback-link svg { width: 18px; height: 18px; fill: #DC2626; flex-shrink: 0; }
-
+    .video-thumb-overlay img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: brightness(.72);
+      transition: filter .3s ease;
+    }
+    .video-thumb-overlay:hover img { filter: brightness(.5); }
+    .video-thumb-overlay .yt-btn {
+      position: relative; z-index: 2;
+      width: 88px; height: 60px;
+      background: #FF0000;
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 28px rgba(0,0,0,.55);
+      transition: transform .2s ease, background .2s ease;
+    }
+    .video-thumb-overlay:hover .yt-btn { background: #cc0000; transform: scale(1.1); }
+    .video-thumb-overlay .yt-btn svg { width: 32px; height: 32px; fill: white; }
+    .video-thumb-overlay .vid-label {
+      position: relative; z-index: 2;
+      color: #fff;
+      font-size: 15px; font-weight: 700;
+      text-shadow: 0 2px 10px rgba(0,0,0,.9);
+      text-align: center;
+      padding: 0 24px;
+    }
+    .video-container iframe {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      border: none;
+      display: none;
+    }
+    .video-container.playing .video-thumb-overlay { display: none; }
+    .video-container.playing iframe { display: block; }
+ 
     /* ─── APAIS QUESTIONS ────────────────────────────── */
     .apais-intro {
       background: var(--gold-pale);
@@ -297,7 +331,7 @@
     }
     .apais-intro svg { width: 20px; height: 20px; fill: var(--gold); flex-shrink: 0; margin-top: 2px; }
     .apais-intro p { font-size: 14px; color: var(--gray-600); line-height: 1.65; }
-
+ 
     /* Phase badge inside APAIS */
     .apais-phase-banner {
       display: flex; align-items: center; gap: 14px;
@@ -315,7 +349,7 @@
     .apais-phase-banner.pre  div h4 { color: #1D4ED8; }
     .apais-phase-banner.post div h4 { color: var(--green-deep); }
     .apais-phase-banner div p { font-size: 12px; color: var(--gray-600); }
-
+ 
     .apais-questions { display: flex; flex-direction: column; gap: 20px; }
     .q-card {
       background: var(--white);
@@ -350,7 +384,7 @@
     .likert-option:has(input:checked) .likert-label-text { color: var(--green-deep); font-weight: 700; }
     .likert-extremes { display: flex; justify-content: space-between; margin-top: 8px; padding: 0 4px; }
     .likert-extremes span { font-size: 11px; color: var(--gray-400); font-style: italic; }
-
+ 
     .score-preview {
       background: var(--green-pale);
       border: 1px solid #C5E0D0;
@@ -361,7 +395,7 @@
     }
     .score-preview p { font-size: 14px; color: var(--gray-600); }
     .score-preview .score-num { font-size: 28px; font-weight: 700; color: var(--green-deep); }
-
+ 
     /* ─── EDUCATION SECTIONS ─────────────────────────── */
     .edu-sections { display: flex; flex-direction: column; gap: 20px; margin-bottom: 32px; }
     .edu-section { border: 1px solid var(--gray-200); border-radius: var(--radius-md); overflow: hidden; }
@@ -378,7 +412,7 @@
     .edu-body ul li { display: flex; gap: 12px; font-size: 14px; color: var(--gray-600); line-height: 1.6; }
     .edu-body ul li::before { content: ''; width: 6px; height: 6px; background: var(--gold); border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
     [dir="rtl"] .edu-body ul li::before { margin-top: 7px; }
-
+ 
     .understanding-check {
       background: var(--green-pale); border: 1px solid #C5E0D0;
       border-radius: var(--radius-md); padding: 20px 24px;
@@ -393,7 +427,7 @@
     .check-box.checked { background: var(--green-mid); }
     .check-box svg { width: 14px; height: 14px; stroke: white; fill: none; stroke-width: 3; display: none; }
     .check-box.checked svg { display: block; }
-
+ 
     /* ─── CONSENT ────────────────────────────────────── */
     .consent-document {
       background: var(--white); border: 1px solid var(--gray-200);
@@ -411,7 +445,7 @@
     .consent-hosp-sub  { font-size: 12px; color: var(--gray-400); letter-spacing: .5px; text-transform: uppercase; }
     .consent-logo-area { width: 56px; height: 56px; background: var(--green-deep); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     .consent-logo-area svg { width: 28px; height: 28px; fill: white; }
-
+ 
     .signature-area { margin-top: 20px; }
     .sig-canvas-wrap { border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm); background: #FAFAFA; position: relative; overflow: hidden; }
     #sigCanvas { display: block; width: 100%; cursor: crosshair; touch-action: none; }
@@ -424,7 +458,7 @@
     .sig-tab.active { background: var(--green-mid); color: white; }
     .sig-type-input { width: 100%; padding: 14px 18px; border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 20px; font-family: 'Tajawal', serif; color: var(--green-deep); background: var(--white); outline: none; transition: var(--transition); -webkit-appearance: none; }
     .sig-type-input:focus { border-color: var(--green-mid); box-shadow: 0 0 0 3px var(--green-pale); }
-
+ 
     .consent-checklist { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
     .consent-check-item { display: flex; align-items: flex-start; gap: 14px; cursor: pointer; }
     .custom-checkbox { width: 22px; height: 22px; border: 2px solid var(--gray-200); border-radius: 5px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: var(--transition); background: var(--white); }
@@ -432,7 +466,7 @@
     .custom-checkbox svg { width: 13px; height: 13px; stroke: white; fill: none; stroke-width: 3; display: none; }
     .custom-checkbox.checked svg { display: block; }
     .consent-check-item span { font-size: 14px; color: var(--gray-600); line-height: 1.6; }
-
+ 
     /* ─── CONFIRMATION ───────────────────────────────── */
     .confirm-hero { text-align: center; padding: 48px 32px 40px; }
     .status-icon { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
@@ -441,14 +475,14 @@
     .status-icon svg { width: 36px; height: 36px; }
     .status-icon.green svg { stroke: var(--green-mid); fill: none; stroke-width: 2; }
     .status-icon.red   svg { stroke: #DC2626; fill: none; stroke-width: 2; }
-
+ 
     .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-top: 32px; }
     .summary-item { background: var(--gray-100); border-radius: var(--radius-md); padding: 20px; text-align: center; }
     .summary-item .s-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--gray-400); font-weight: 700; margin-bottom: 8px; }
     .summary-item .s-value { font-size: 18px; font-weight: 700; color: var(--gray-800); }
     .summary-item .s-value.score-high { color: #DC2626; }
     .summary-item .s-value.score-normal { color: var(--green-mid); }
-
+ 
     .message-box { border-radius: var(--radius-md); padding: 24px 28px; margin-top: 28px; display: flex; gap: 16px; align-items: flex-start; }
     .message-box.normal { background: var(--green-pale); border: 1px solid #C5E0D0; }
     .message-box.high   { background: #FFF7ED; border: 1px solid #FED7AA; }
@@ -459,13 +493,13 @@
     .message-box.normal div h4 { color: var(--green-deep); }
     .message-box.high   div h4 { color: #C2410C; }
     .message-box div p { font-size: 14px; color: var(--gray-600); line-height: 1.65; }
-
+ 
     .steps-done-list { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
     .step-done-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--white); border-radius: var(--radius-sm); border: 1px solid var(--gray-200); }
     .step-done-item .check-circle { width: 28px; height: 28px; background: var(--green-pale); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .step-done-item .check-circle svg { width: 14px; height: 14px; stroke: var(--green-mid); fill: none; stroke-width: 2.5; }
     .step-done-item span { font-size: 14px; color: var(--gray-800); font-weight: 500; }
-
+ 
     /* ─── TOAST ──────────────────────────────────────── */
     .toast-wrap { position: fixed; bottom: 32px; left: 32px; right: auto; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
     [dir="ltr"] .toast-wrap { left: auto; right: 32px; }
@@ -486,7 +520,7 @@
     @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes fadeOut { to { opacity: 0; } }
-
+ 
     /* ─── LOADING OVERLAY ────────────────────────────── */
     .loading-overlay {
       position: fixed; inset: 0;
@@ -497,7 +531,7 @@
     .loading-overlay.active { display: flex; }
     .loading-ring { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,.3); border-top-color: white; border-radius: 50%; animation: spin .8s linear infinite; }
     .loading-overlay p { color: white; font-size: 15px; font-weight: 500; }
-
+ 
     /* ─── UTILITIES ──────────────────────────────────── */
     .flex-between { display: flex; align-items: center; justify-content: space-between; }
     .flex-gap-12 { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
@@ -509,7 +543,7 @@
     .mb-24 { margin-bottom: 24px; }
     .text-center { text-align: center; }
     .hidden { display: none !important; }
-
+ 
     /* ─── MOBILE STICKY BAR ──────────────────────────── */
     .mobile-sticky-bar { display: none; }
     @media (max-width: 480px) {
@@ -521,7 +555,7 @@
       }
       .mobile-sticky-bar .btn { width: 100%; justify-content: center; }
     }
-
+ 
     /* ─── RESPONSIVE ─────────────────────────────────── */
     @media (max-width: 600px) {
       .main-content { padding: 16px 12px 90px; }
@@ -554,7 +588,7 @@
 </head>
 <body>
 <div class="app-wrapper">
-
+ 
   <!-- ── HEADER ── -->
   <header class="site-header">
     <div class="header-brand">
@@ -571,7 +605,7 @@
     </div>
     <button class="lang-toggle" id="langToggle" onclick="toggleLang()">English</button>
   </header>
-
+ 
   <!-- ── PROGRESS BAR ── -->
   <div class="progress-bar-wrap" id="progressBarWrap">
     <div class="progress-steps">
@@ -601,11 +635,11 @@
       </div>
     </div>
   </div>
-
+ 
   <!-- ── MAIN ── -->
   <main class="main-content">
     <div class="page-container">
-
+ 
       <!-- ════════════════════════ SCREEN 0 — REGISTRATION ════════ -->
       <div class="screen active" id="screen0">
         <div class="landing-hero">
@@ -619,23 +653,23 @@
             <div class="hero-step-chip"><span class="num">4</span> <span id="chip4">وقّع الموافقة</span></div>
           </div>
         </div>
-
+ 
         <div class="card mt-24">
           <p class="section-label" id="regLabel">تسجيل المريض</p>
           <h2 class="display-title mb-16" style="font-size:24px;" id="regTitle">أدخل بياناتك</h2>
-
+ 
           <div class="input-group">
             <label class="input-label" id="lblName">الاسم الكامل</label>
             <div class="input-wrap"><input type="text" id="patientName" /></div>
             <div class="field-error" id="nameError">يرجى إدخال اسمك الكامل.</div>
           </div>
-
+ 
           <div class="input-group">
             <label class="input-label" id="lblId">رقم الهوية الوطنية / الإقامة</label>
             <div class="input-wrap"><input type="text" id="patientId" maxlength="10" /></div>
             <div class="field-error" id="idError">يرجى إدخال رقم هوية مكوّن من 10 أرقام.</div>
           </div>
-
+ 
           <div class="form-two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             <div class="input-group" style="margin-bottom:0">
               <label class="input-label" id="lblDob">تاريخ الميلاد</label>
@@ -661,7 +695,7 @@
               <div class="field-error" id="procError">يرجى اختيار الإجراء.</div>
             </div>
           </div>
-
+ 
           <div class="mt-32">
             <button class="btn btn-primary btn-lg" onclick="startProcess()">
               <span class="btn-text" id="btnBegin">ابدأ الجلسة</span>
@@ -670,7 +704,7 @@
             </button>
           </div>
         </div>
-
+ 
         <div class="landing-info-grid mt-24">
           <div class="info-card">
             <div class="info-card-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
@@ -689,12 +723,12 @@
           </div>
         </div>
       </div>
-
+ 
       <!-- ════════════════════════ SCREEN 1 — PRE-VIDEO APAIS ════════ -->
       <div class="screen" id="screen1">
         <p class="section-label" id="preLabel">الخطوة 1 من 4</p>
         <h2 class="display-title mb-16" id="preTitle">تقييم القلق — قبل مشاهدة الفيديو</h2>
-
+ 
         <div class="apais-phase-banner pre">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
           <div>
@@ -702,14 +736,14 @@
             <p id="preBannerDesc">نقيس مستوى قلقك قبل مشاهدة الفيديو التعليمي.</p>
           </div>
         </div>
-
+ 
         <div class="apais-intro">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-11v6h2v-6h-2zm0-4v2h2V7h-2z"/></svg>
           <p id="apaisIntroText">يساعدنا مقياس أمستردام للقلق قبل الجراحة (APAIS) على فهم كيف تشعر قبل إجراءاتك. يرجى الإجابة بصدق — لا توجد إجابات صحيحة أو خاطئة.</p>
         </div>
-
+ 
         <div class="apais-questions" id="preApaisQuestions"></div>
-
+ 
         <div class="score-preview" id="preScorePreview">
           <div>
             <p style="font-weight:700;color:var(--gray-800);margin-bottom:4px;" id="preScoreLabel">النتيجة الحالية</p>
@@ -717,7 +751,7 @@
           </div>
           <div class="score-num" id="preLiveScore">—</div>
         </div>
-
+ 
         <div class="mt-16 flex-gap-12 btn-row-mobile">
           <button class="btn btn-outline" onclick="goToScreen(0)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
@@ -730,7 +764,7 @@
           </button>
         </div>
       </div>
-
+ 
       <!-- ════════════════════════ SCREEN 2 — VIDEO ════════ -->
       <div class="screen" id="screen2">
         <div class="flex-between mb-16 edu-screen-header">
@@ -740,24 +774,28 @@
           </div>
           <span class="badge badge-gold" id="procedureBadge">جراحة عامة</span>
         </div>
-
+ 
         <div class="card">
-          <!-- Video Player — embedded directly for reliability -->
-          <div class="video-frame-wrap">
-            <iframe
-              id="videoIframe"
-              src="https://www.youtube.com/embed/vMAjWEsptFQ?rel=0&modestbranding=1"
-              title="Procedure Education Video"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowfullscreen
-              loading="lazy"></iframe>
+          <!-- Video: thumbnail shown first; clicking loads iframe inline (no new tab) -->
+          <div class="video-container" id="videoContainer">
+            <!-- Thumbnail overlay — click to play -->
+            <div class="video-thumb-overlay" onclick="playVideo()" id="videoThumbOverlay">
+              <img
+                src="https://img.youtube.com/vi/vMAjWEsptFQ/maxresdefault.jpg"
+                alt="Video thumbnail"
+                onerror="this.src='https://img.youtube.com/vi/vMAjWEsptFQ/hqdefault.jpg'"
+              />
+              <div class="yt-btn">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+              <div class="vid-label" id="vidOverlayLabel">شاهد: شرح إجراءك الجراحي</div>
+            </div>
+            <!-- iframe injected by JS when play is clicked -->
+            <iframe id="videoIframe" allowfullscreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              title="Procedure Education Video"></iframe>
           </div>
-          <!-- Fallback: open directly on YouTube if embed is blocked -->
-          <a class="video-fallback-link" href="https://www.youtube.com/watch?v=vMAjWEsptFQ" target="_blank" rel="noopener" id="videoFallbackLink">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M23.495 6.205a3.007 3.007 0 00-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 00.527 6.205a31.247 31.247 0 00-.522 5.805 31.247 31.247 0 00.522 5.783 3.007 3.007 0 002.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 002.088-2.088 31.247 31.247 0 00.5-5.783 31.247 31.247 0 00-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
-            <span id="vidFallbackText">إذا لم يظهر الفيديو، اضغط هنا لمشاهدته على يوتيوب</span>
-          </a>
-
+ 
           <!-- Educational Accordion Sections -->
           <div class="edu-sections">
             <div class="edu-section open" id="sec-overview">
@@ -775,7 +813,7 @@
                 </ul>
               </div>
             </div>
-
+ 
             <div class="edu-section" id="sec-risks">
               <div class="edu-section-header" onclick="toggleEduSection('sec-risks')">
                 <div class="edu-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01"/></svg></div>
@@ -790,7 +828,7 @@
                 </ul>
               </div>
             </div>
-
+ 
             <div class="edu-section" id="sec-recovery">
               <div class="edu-section-header" onclick="toggleEduSection('sec-recovery')">
                 <div class="edu-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
@@ -807,7 +845,7 @@
               </div>
             </div>
           </div>
-
+ 
           <!-- Understanding check -->
           <div class="understanding-check" id="understandingCheck">
             <div class="check-box" id="eduCheckBox" onclick="toggleEduCheck()">
@@ -818,7 +856,7 @@
             </p>
           </div>
           <div class="field-error" id="eduCheckError">يرجى تأكيد مراجعتك للمواد التعليمية.</div>
-
+ 
           <div class="mt-24 flex-gap-12 btn-row-mobile">
             <button class="btn btn-outline" onclick="goToScreen(1)">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
@@ -832,12 +870,12 @@
           </div>
         </div>
       </div>
-
+ 
       <!-- ════════════════════════ SCREEN 3 — POST-VIDEO APAIS ════════ -->
       <div class="screen" id="screen3">
         <p class="section-label" id="postLabel">الخطوة 3 من 4</p>
         <h2 class="display-title mb-16" id="postTitle">تقييم القلق — بعد مشاهدة الفيديو</h2>
-
+ 
         <div class="apais-phase-banner post">
           <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           <div>
@@ -845,14 +883,14 @@
             <p id="postBannerDesc">نعيد قياس مستوى قلقك بعد مشاهدة الفيديو التعليمي.</p>
           </div>
         </div>
-
+ 
         <div class="apais-intro">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-11v6h2v-6h-2zm0-4v2h2V7h-2z"/></svg>
           <p id="postIntroText">الآن بعد أن شاهدت الفيديو، أجب على نفس الأسئلة مرة أخرى. ستساعدنا إجاباتك على قياس فائدة التعليم.</p>
         </div>
-
+ 
         <div class="apais-questions" id="postApaisQuestions"></div>
-
+ 
         <div class="score-preview" id="postScorePreview">
           <div>
             <p style="font-weight:700;color:var(--gray-800);margin-bottom:4px;" id="postScoreLabel">النتيجة الحالية</p>
@@ -860,7 +898,7 @@
           </div>
           <div class="score-num" id="postLiveScore">—</div>
         </div>
-
+ 
         <div class="mt-16 flex-gap-12 btn-row-mobile">
           <button class="btn btn-outline" onclick="goToScreen(2)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
@@ -873,12 +911,12 @@
           </button>
         </div>
       </div>
-
+ 
       <!-- ════════════════════════ SCREEN 4 — CONSENT ════════ -->
       <div class="screen" id="screen4">
         <p class="section-label" id="conLabel">الخطوة 4 من 4</p>
         <h2 class="display-title mb-16" id="conTitle">الموافقة المستنيرة</h2>
-
+ 
         <!-- Consent Document -->
         <div class="consent-document">
           <div class="consent-letterhead">
@@ -903,7 +941,7 @@
           <h3 id="conH5">5. حق الانسحاب</h3>
           <p id="conP5">أفهم أن لي الحق في سحب موافقتي في أي وقت قبل بدء الإجراء، دون المساس باستمرار رعايتي.</p>
         </div>
-
+ 
         <!-- Patient Details -->
         <div class="card mb-24">
           <p class="section-label" id="conPatLabel">بيانات المريض</p>
@@ -913,7 +951,7 @@
             <div><span style="font-size:12px;color:var(--gray-400);font-weight:700;text-transform:uppercase;letter-spacing:.8px;" id="conProcLabel">الإجراء</span><br/><strong id="consentProcedure" style="font-size:15px;">—</strong></div>
             <div><span style="font-size:12px;color:var(--gray-400);font-weight:700;text-transform:uppercase;letter-spacing:.8px;" id="conDateLabel">التاريخ</span><br/><strong id="consentDate" style="font-size:15px;">—</strong></div>
           </div>
-
+ 
           <!-- Signature -->
           <div class="signature-area">
             <label class="input-label" id="sigLabel">توقيع المريض</label>
@@ -938,7 +976,7 @@
             <div class="field-error" id="sigError">يرجى تقديم توقيعك.</div>
           </div>
         </div>
-
+ 
         <!-- Checklist -->
         <div class="consent-checklist">
           <label class="consent-check-item" onclick="toggleCheck('cc1')">
@@ -955,7 +993,7 @@
           </label>
         </div>
         <div class="field-error" id="checklistError">يرجى تحديد جميع الخانات لتأكيد موافقتك.</div>
-
+ 
         <div class="mt-24 flex-gap-12 btn-row-mobile">
           <button class="btn btn-outline" onclick="goToScreen(3)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
@@ -968,13 +1006,13 @@
           </button>
         </div>
       </div>
-
+ 
       <!-- ════════════════════════ SCREEN 5 — CONFIRMATION ════════ -->
       <div class="screen" id="screen5">
         <div class="card">
           <div class="confirm-hero" id="confirmHero"></div>
           <div class="divider"></div>
-
+ 
           <p class="section-label" id="doneLabel">الخطوات المكتملة</p>
           <div class="steps-done-list">
             <div class="step-done-item"><div class="check-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span id="done1">تم التقييم الأوّلي للقلق (قبل الفيديو)</span></div>
@@ -982,10 +1020,10 @@
             <div class="step-done-item"><div class="check-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span id="done3">تم التقييم البعدي للقلق (بعد الفيديو)</span></div>
             <div class="step-done-item"><div class="check-circle"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span id="done4">تم توقيع الموافقة المستنيرة وتقديمها</span></div>
           </div>
-
+ 
           <div class="summary-grid" id="summaryGrid"></div>
           <div id="messageBox" class="mt-16"></div>
-
+ 
           <div class="mt-32 text-center">
             <button class="btn btn-outline" onclick="window.print()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -994,32 +1032,32 @@
           </div>
         </div>
       </div>
-
+ 
     </div>
   </main>
 </div>
-
+ 
 <!-- ── MOBILE STICKY BAR ── -->
 <div class="mobile-sticky-bar" id="mobileStickyBar"></div>
-
+ 
 <!-- ── TOAST ── -->
 <div class="toast-wrap" id="toastWrap"></div>
-
+ 
 <!-- ── LOADING OVERLAY ── -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="loading-ring"></div>
   <p id="loadingText">جارٍ إرسال بياناتك بأمان...</p>
 </div>
-
+ 
 <!-- ════════════════════════════════════════════════════ -->
 <!--  JAVASCRIPT                                         -->
 <!-- ════════════════════════════════════════════════════ -->
 <script>
 /* ─── CONFIG ────────────────────────────────────────────── */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzb4xMjhPDU_AxUq7lu7wpgJBC3zIGJBz5wHWVahGMDnuCQVMsWqoaRzeTmW3Zm5VeOnA/exec'; // Replace with deployed URL
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwxL-xqMn3SD4jpJF1k6rLOrkV5smrN9SRXk73krWVT3U2qRHiBdCsGO8htIDIzjGIBVw/exec';
 const APAIS_THRESHOLD = 11;
 const YOUTUBE_VIDEO_ID = 'vMAjWEsptFQ';
-
+ 
 /* ─── STATE ─────────────────────────────────────────────── */
 const state = {
   lang: 'ar',
@@ -1038,11 +1076,11 @@ const state = {
   consentChecks: { cc1: false, cc2: false, cc3: false },
   canvasInited: false
 };
-
+ 
 let hasSig = false;
 let sigCtx  = null;
 let dpr     = 1;
-
+ 
 /* ─── APAIS QUESTIONS ───────────────────────────────────── */
 const apaisQuestions = [
   { en: "I am worried about the anesthetic.",                            ar: "أنا قلق بشأن التخدير." },
@@ -1056,7 +1094,7 @@ const likertLabels = {
   en: ['Not at all', 'Slightly', 'Moderately', 'Quite a bit', 'Extremely'],
   ar: ['لا على الإطلاق', 'قليلاً', 'إلى حد ما', 'كثيراً', 'بشدة']
 };
-
+ 
 /* ─── TRANSLATIONS ──────────────────────────────────────── */
 const T = {
   ar: {
@@ -1082,7 +1120,7 @@ const T = {
     preScoreLabel:'النتيجة الحالية', preScoreHint:'أجب على جميع الأسئلة للمتابعة',
     backBtn1:'رجوع', btnPreSubmit:'التالي — شاهد الفيديو',
     vidLabel:'الخطوة 2 من 4', vidTitle:'الفيديو التعليمي',
-    vidFallbackText:'إذا لم يظهر الفيديو، اضغط هنا لمشاهدته على يوتيوب',
+    vidOverlayLabel:'شاهد: شرح إجراءك الجراحي',
     sec1h:'نظرة عامة على الإجراء', sec2h:'المخاطر والاعتبارات', sec3h:'توقعات التعافي',
     ov1:'سيشرح جراحك الخطوات المحددة لعمليتك قبل إجراء العملية.',
     ov2:'قد يُستخدم التخدير العام أو الموضعي حسب حالتك.',
@@ -1161,7 +1199,7 @@ const T = {
     preScoreLabel:'Current Score', preScoreHint:'Answer all questions to continue',
     backBtn1:'Back', btnPreSubmit:'Next — Watch Video',
     vidLabel:'Step 2 of 4', vidTitle:'Educational Video',
-    vidFallbackText:'If the video does not load, click here to watch it on YouTube',
+    vidOverlayLabel:'Watch: Your Surgical Procedure Explained',
     sec1h:'Procedure Overview', sec2h:'Risks & Considerations', sec3h:'Recovery Expectations',
     ov1:'Your surgeon will explain the specific steps of your operation prior to the procedure.',
     ov2:'General anesthesia or regional anesthesia may be used depending on your case.',
@@ -1218,20 +1256,20 @@ const T = {
     qNum:'Question'
   }
 };
-
+ 
 const PROC_AR_TO_EN = {
   'جراحة عامة':'General Surgery','جراحة العظام':'Orthopedic Surgery','جراحة القلب':'Cardiac Surgery',
   'جراحة بالمنظار':'Laparoscopic Surgery','جراحة الأنف والأذن والحنجرة':'ENT Surgery',
   'جراحة المخ والأعصاب':'Neurosurgery','المسالك البولية':'Urology','طب العيون':'Ophthalmology','أخرى':'Other'
 };
-
+ 
 /* ─── APPLY TRANSLATIONS ─────────────────────────────────── */
 function applyLang() {
   const t = T[state.lang];
   const isAr = state.lang === 'ar';
   document.documentElement.lang = state.lang;
   document.documentElement.dir  = isAr ? 'rtl' : 'ltr';
-
+ 
   const ids = [
     'headerMain','headerSub','sl0','sl1','sl2','sl3','sl4','sl5',
     'heroEyebrow','heroTitle','heroDesc','chip1','chip2','chip3','chip4',
@@ -1240,7 +1278,7 @@ function applyLang() {
     'ic1t','ic1d','ic2t','ic2d','ic3t','ic3d',
     'preLabel','preTitle','preBannerTitle','preBannerDesc','apaisIntroText',
     'preScoreLabel','preScoreHint','backBtn1','btnPreSubmit',
-    'vidLabel','vidTitle','vidFallbackText',
+    'vidLabel','vidTitle','vidOverlayLabel',
     'sec1h','sec2h','sec3h',
     'ov1','ov2','ov3','ov4','rk1','rk2','rk3','rv1','rv2','rv3','rv4',
     'eduCheckText','eduCheckError','backBtn2','btnPostProceed',
@@ -1257,32 +1295,32 @@ function applyLang() {
     const el = document.getElementById(id);
     if (el && t[id] !== undefined) el.textContent = t[id];
   });
-
+ 
   // Tab buttons use different IDs
   const tabDraw = document.getElementById('tabDraw');
   const tabType = document.getElementById('tabType');
   if (tabDraw) tabDraw.textContent = t.tabDrawBtn;
   if (tabType) tabType.textContent = t.tabTypeBtn;
-
+ 
   const sigTypeInput = document.getElementById('sigTypeInput');
   if (sigTypeInput) sigTypeInput.placeholder = t.sigTypePlaceholder;
-
+ 
   const procPlaceholder = document.getElementById('procPlaceholder');
   if (procPlaceholder) procPlaceholder.textContent = t.procPlaceholder;
-
+ 
   document.getElementById('langToggle').textContent = t.langBtn;
-
+ 
   // Rebuild APAIS questions in new language
   buildAPAIS('pre');
   buildAPAIS('post');
   updateStickyBar(state.currentScreen);
 }
-
+ 
 function toggleLang() {
   state.lang = state.lang === 'ar' ? 'en' : 'ar';
   applyLang();
 }
-
+ 
 /* ─── SCREEN NAVIGATION ─────────────────────────────────── */
 function goToScreen(n) {
   document.getElementById('screen' + state.currentScreen).classList.remove('active');
@@ -1291,7 +1329,7 @@ function goToScreen(n) {
   updateProgressBar(n);
   updateStickyBar(n);
   window.scrollTo({ top: 0, behavior: 'smooth' });
-
+ 
   if (n === 4) {
     // Consent screen
     document.getElementById('consentName').textContent      = state.patient.name;
@@ -1304,7 +1342,7 @@ function goToScreen(n) {
   }
   if (n === 5) buildConfirmation();
 }
-
+ 
 function updateProgressBar(n) {
   for (let i = 0; i <= 5; i++) {
     const ps = document.getElementById('ps' + i);
@@ -1313,7 +1351,7 @@ function updateProgressBar(n) {
     if (i === n) ps.classList.add('active');
   }
 }
-
+ 
 /* ─── MOBILE STICKY BAR ─────────────────────────────────── */
 function updateStickyBar(n) {
   const bar = document.getElementById('mobileStickyBar');
@@ -1329,7 +1367,7 @@ function updateStickyBar(n) {
   };
   bar.innerHTML = btns[n] || '';
 }
-
+ 
 /* ─── INIT ───────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   applyLang(); // set Arabic default
@@ -1337,7 +1375,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildAPAIS('post');
   updateStickyBar(0);
 });
-
+ 
 /* ─── REGISTRATION ───────────────────────────────────────── */
 function startProcess() {
   const name = document.getElementById('patientName').value.trim();
@@ -1345,22 +1383,22 @@ function startProcess() {
   const dob  = document.getElementById('patientDob').value;
   const proc = document.getElementById('patientProcedure').value;
   let valid = true;
-
+ 
   // Clear previous errors
   ['nameError','idError','dobError','procError'].forEach(e => document.getElementById(e).classList.remove('visible'));
   ['patientName','patientId','patientDob','patientProcedure'].forEach(e => document.getElementById(e).classList.remove('error'));
-
+ 
   if (!name || name.length < 2) { showError('nameError','patientName'); valid = false; }
   if (!/^\d{10}$/.test(id))     { showError('idError','patientId');     valid = false; }
   if (!dob)                     { showError('dobError','patientDob');    valid = false; }
   if (!proc)                    { showError('procError','patientProcedure'); valid = false; }
   if (!valid) return;
-
+ 
   state.patient = { name, id, dob, procedure: proc };
   document.getElementById('procedureBadge').textContent = proc;
   goToScreen(1);
 }
-
+ 
 /* ─── BUILD APAIS QUESTIONS ─────────────────────────────── */
 function buildAPAIS(phase) {
   const containerId = phase === 'pre' ? 'preApaisQuestions' : 'postApaisQuestions';
@@ -1369,7 +1407,7 @@ function buildAPAIS(phase) {
   const scores = phase === 'pre' ? state.preScores : state.postScores;
   const labels = likertLabels[state.lang];
   const prefix = phase;
-
+ 
   container.innerHTML = apaisQuestions.map((q, i) => `
     <div class="q-card ${scores[i] ? 'answered' : ''}" id="${prefix}q${i}">
       <div class="q-number">${T[state.lang].qNum} ${i + 1}</div>
@@ -1389,7 +1427,7 @@ function buildAPAIS(phase) {
       </div>
     </div>`).join('');
 }
-
+ 
 function updateScore(phase, idx, val) {
   if (phase === 'pre') {
     state.preScores[idx] = val;
@@ -1406,7 +1444,7 @@ function updateScore(phase, idx, val) {
   const cardId = (phase === 'pre' ? 'pre' : 'post') + 'q' + idx;
   document.getElementById(cardId)?.classList.add('answered');
 }
-
+ 
 /* ─── PRE-VIDEO APAIS SUBMIT ─────────────────────────────── */
 function submitPreAPAIS() {
   const unanswered = state.preScores.filter(s => s === 0).length;
@@ -1418,20 +1456,28 @@ function submitPreAPAIS() {
   state.preAnxietyLevel = state.preTotalScore >= APAIS_THRESHOLD ? 'HIGH' : 'NORMAL';
   goToScreen(2);
 }
-
+ 
 /* ─── VIDEO ──────────────────────────────────────────────── */
+function playVideo() {
+  const container = document.getElementById('videoContainer');
+  const iframe    = document.getElementById('videoIframe');
+  // Set src only on click — autoplay works because it's a user gesture
+  iframe.src = 'https://www.youtube.com/embed/vMAjWEsptFQ?autoplay=1&rel=0&modestbranding=1';
+  container.classList.add('playing');
+}
+ 
 function toggleEduSection(id) {
   const sec = document.getElementById(id);
   sec.classList.toggle('open');
 }
-
+ 
 function toggleEduCheck() {
   state.eduChecked = !state.eduChecked;
   const box = document.getElementById('eduCheckBox');
   box.classList.toggle('checked', state.eduChecked);
   document.getElementById('eduCheckError').classList.remove('visible');
 }
-
+ 
 /* ─── PROCEED TO POST-VIDEO APAIS ────────────────────────── */
 function proceedToPostAPAIS() {
   if (!state.eduChecked) {
@@ -1440,7 +1486,7 @@ function proceedToPostAPAIS() {
   }
   goToScreen(3);
 }
-
+ 
 /* ─── POST-VIDEO APAIS SUBMIT ────────────────────────────── */
 function submitPostAPAIS() {
   const unanswered = state.postScores.filter(s => s === 0).length;
@@ -1452,7 +1498,7 @@ function submitPostAPAIS() {
   state.postAnxietyLevel = state.postTotalScore >= APAIS_THRESHOLD ? 'HIGH' : 'NORMAL';
   goToScreen(4);
 }
-
+ 
 /* ─── CONSENT ────────────────────────────────────────────── */
 function toggleCheck(id) {
   state.consentChecks[id] = !state.consentChecks[id];
@@ -1460,12 +1506,12 @@ function toggleCheck(id) {
   el.classList.toggle('checked', state.consentChecks[id]);
   document.getElementById('checklistError').classList.remove('visible');
 }
-
+ 
 function updateConsentDate() {
   const el = document.getElementById('consentDate');
   if (el) el.textContent = new Date().toLocaleDateString(state.lang === 'ar' ? 'ar-SA' : 'en-GB');
 }
-
+ 
 /* ─── SIGNATURE ──────────────────────────────────────────── */
 function initSignatureCanvas() {
   const c = document.getElementById('sigCanvas');
@@ -1487,7 +1533,7 @@ function initSignatureCanvas() {
   sigCtx.lineJoin    = 'round';
   hasSig = false;
   document.getElementById('sigHint').style.display = '';
-
+ 
   let isDrawing = false;
   canvas.addEventListener('mousedown', e => { isDrawing = true; sigCtx.beginPath(); sigCtx.moveTo(getPos(e,canvas).x, getPos(e,canvas).y); document.getElementById('sigHint').style.display='none'; });
   canvas.addEventListener('mousemove', e => { if (!isDrawing) return; hasSig = true; sigCtx.lineTo(getPos(e,canvas).x, getPos(e,canvas).y); sigCtx.stroke(); });
@@ -1497,7 +1543,7 @@ function initSignatureCanvas() {
   canvas.addEventListener('touchmove',  e => { e.preventDefault(); if (!isDrawing) return; hasSig=true; sigCtx.lineTo(getTouchPos(e,canvas).x, getTouchPos(e,canvas).y); sigCtx.stroke(); }, { passive: false });
   canvas.addEventListener('touchend',   e => { e.preventDefault(); isDrawing=false; }, { passive: false });
 }
-
+ 
 function getPos(e, canvas) {
   const r = canvas.getBoundingClientRect();
   return { x: e.clientX - r.left, y: e.clientY - r.top };
@@ -1520,7 +1566,7 @@ function switchSigTab(mode) {
   document.getElementById('drawArea').classList.toggle('hidden', mode !== 'draw');
   document.getElementById('typeArea').classList.toggle('hidden', mode !== 'type');
 }
-
+ 
 function submitConsent() {
   let valid = true;
   if (state.sigMode === 'draw') {
@@ -1538,7 +1584,7 @@ function submitConsent() {
   state.consentSigned = true;
   submitToBackend();
 }
-
+ 
 /* ─── BACKEND SUBMISSION ─────────────────────────────────── */
 async function submitToBackend() {
   document.getElementById('loadingOverlay').classList.add('active');
@@ -1560,18 +1606,12 @@ async function submitToBackend() {
     language:         state.lang,
     timestamp:        new Date().toISOString()
   };
-
+ 
   try {
-    if (GAS_URL === 'https://script.google.com/macros/s/AKfycbzb4xMjhPDU_AxUq7lu7wpgJBC3zIGJBz5wHWVahGMDnuCQVMsWqoaRzeTmW3Zm5VeOnA/exec') {
-      await new Promise(r => setTimeout(r, 1800)); // mock delay
-    } else {
-      await fetch(GAS_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-    }
+    // Use a hidden form POST — the only method that reliably works with
+    // Google Apps Script from a local file or any origin without CORS issues.
+    // no-cors + JSON headers is blocked by browsers; form POST bypasses this.
+    await submitViaForm(GAS_URL, payload);
     document.getElementById('loadingOverlay').classList.remove('active');
     goToScreen(5);
   } catch (err) {
@@ -1579,7 +1619,46 @@ async function submitToBackend() {
     showToast(T[state.lang].errSubmit, 'error');
   }
 }
-
+ 
+function submitViaForm(url, data) {
+  return new Promise((resolve) => {
+    // Create a hidden iframe to capture the form response (prevents page navigation)
+    let iframe = document.getElementById('_gasFrame');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.name = '_gasFrame';
+      iframe.id   = '_gasFrame';
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+    }
+ 
+    // Build a hidden form that posts JSON as a single field
+    const form = document.createElement('form');
+    form.method  = 'POST';
+    form.action  = url;
+    form.target  = '_gasFrame';   // POST into hidden iframe, not current page
+    form.style.display = 'none';
+ 
+    // GAS reads e.postData.contents — we pass JSON inside a hidden field
+    // BUT GAS with no-cors form POST actually receives the raw body fine.
+    // We wrap the JSON in a field called 'payload' and read it in doPost.
+    const field = document.createElement('input');
+    field.type  = 'hidden';
+    field.name  = 'payload';
+    field.value = JSON.stringify(data);
+    form.appendChild(field);
+ 
+    document.body.appendChild(form);
+ 
+    // Resolve after a short delay — form POST to GAS is fire-and-forget
+    // (we can't read the iframe response cross-origin, but data is sent)
+    iframe.onload = () => { resolve(); };
+    setTimeout(resolve, 3000); // fallback resolve after 3s
+    form.submit();
+    document.body.removeChild(form);
+  });
+}
+ 
 /* ─── CONFIRMATION SCREEN ────────────────────────────────── */
 function buildConfirmation() {
   const t    = T[state.lang];
@@ -1594,12 +1673,12 @@ function buildConfirmation() {
       ${high ? t.confirmTitleHigh : t.confirmTitleNormal}
     </h2>
     <p class="body-text">${t.confirmDesc} <strong>${state.patient.name}</strong>.</p>`;
-
+ 
   const delta = state.postTotalScore - state.preTotalScore;
   const deltaStr = delta <= 0
     ? (state.lang === 'ar' ? `▼ ${Math.abs(delta)} انخفض` : `▼ ${Math.abs(delta)} decrease`)
     : (state.lang === 'ar' ? `▲ ${delta} ارتفع` : `▲ ${delta} increase`);
-
+ 
   document.getElementById('summaryGrid').innerHTML = `
     <div class="summary-item">
       <div class="s-label">${t.sLabelPt}</div>
@@ -1621,7 +1700,7 @@ function buildConfirmation() {
       <div class="s-label">${state.lang === 'ar' ? 'التغيير' : 'Change'}</div>
       <div class="s-value" style="font-size:14px;color:${delta<=0?'var(--green-mid)':'#DC2626'}">${deltaStr}</div>
     </div>`;
-
+ 
   document.getElementById('messageBox').innerHTML = high ? `
     <div class="message-box high">
       <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.18 6.18l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
@@ -1632,13 +1711,13 @@ function buildConfirmation() {
       <div><h4>${t.msgNormalTitle}</h4><p>${t.msgNormalBody}</p></div>
     </div>`;
 }
-
+ 
 /* ─── HELPERS ────────────────────────────────────────────── */
 function showError(errId, inputId) {
   document.getElementById(errId).classList.add('visible');
   document.getElementById(inputId).classList.add('error');
 }
-
+ 
 function showToast(msg, type = 'success') {
   const wrap = document.getElementById('toastWrap');
   const t = document.createElement('div');
@@ -1651,7 +1730,7 @@ function showToast(msg, type = 'success') {
   wrap.appendChild(t);
   setTimeout(() => { if (t.parentNode) t.remove(); }, 4200);
 }
-
+ 
 window.addEventListener('resize', () => {
   if (state.currentScreen !== 4 || !state.canvasInited) return;
   state.canvasInited = false;
